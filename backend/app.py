@@ -19,6 +19,8 @@ from routes.dashboard_routes import dashboard_bp
 from routes.ml_routes import ml_bp
 from routes.feed_routes import feed_bp
 from routes.traffic_manager_routes import traffic_manager_bp
+from routes.maneuver_routes import maneuver_bp
+from routes.cascade_routes import cascade_bp
 
 def create_app():
     """Create and configure the Flask application."""
@@ -36,6 +38,8 @@ def create_app():
     app.register_blueprint(ml_bp)
     app.register_blueprint(feed_bp)
     app.register_blueprint(traffic_manager_bp)
+    app.register_blueprint(maneuver_bp)
+    app.register_blueprint(cascade_bp)
 
     # Health check
     @app.route("/api/health", methods=["GET"])
@@ -72,14 +76,5 @@ def create_app():
 
 if __name__ == "__main__":
     app = create_app()
-    print(f"""
-╔══════════════════════════════════════════════════════╗
-║           FORGE-X  Space Traffic Management          ║
-║        AI-Based Satellite Collision Prediction        ║
-╠══════════════════════════════════════════════════════╣
-║  Server:  http://{FLASK_HOST}:{FLASK_PORT}                       ║
-║  API:     http://localhost:{FLASK_PORT}/api                  ║
-║  Health:  http://localhost:{FLASK_PORT}/api/health            ║
-╚══════════════════════════════════════════════════════╝
-    """)
+    print("Starting FORGE-X Backend Server...")
     app.run(host=FLASK_HOST, port=FLASK_PORT, debug=FLASK_DEBUG)

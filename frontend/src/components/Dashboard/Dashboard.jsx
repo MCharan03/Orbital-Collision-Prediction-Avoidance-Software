@@ -44,6 +44,7 @@ export default function Dashboard() {
   const [timeLoading, setTimeLoading] = useState(false);
   const [isFullView, setIsFullView] = useState(false);
   const [aiHighlightedIds, setAiHighlightedIds] = useState([]);
+  const [simulatedManeuver, setSimulatedManeuver] = useState(null);
 
   useEffect(() => {
     document.body.classList.toggle('full-view-active', isFullView);
@@ -109,6 +110,11 @@ export default function Dashboard() {
     setModalAlert(collision);
   }, [positions, handleSelectSatellite]);
 
+  const handleSimulateManeuver = useCallback((maneuver, collision) => {
+    // Save the simulated trajectory so Scene can render it
+    setSimulatedManeuver({ maneuver, collision });
+  }, []);
+
   // ── Loading Screen ─────────────────────────
   if (loading) {
     return (
@@ -151,6 +157,7 @@ export default function Dashboard() {
             onSelectSatellite={handleSelectSatellite}
             trail={trail}
             aiHighlightedIds={aiHighlightedIds}
+            simulatedManeuver={simulatedManeuver}
           />
         </ErrorBoundary>
 
@@ -247,7 +254,7 @@ export default function Dashboard() {
       </div>
 
       {modalAlert && (
-        <AlertModal collision={modalAlert} onClose={() => setModalAlert(null)} />
+        <AlertModal collision={modalAlert} onClose={() => setModalAlert(null)} onSimulateManeuver={handleSimulateManeuver} />
       )}
 
       {/* Anti-Gravity Traffic Manager AI */}
