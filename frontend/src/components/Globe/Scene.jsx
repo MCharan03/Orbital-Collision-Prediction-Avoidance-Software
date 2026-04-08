@@ -48,7 +48,7 @@ function CameraRig({ selectedSatId, positions }) {
   );
 }
 
-export default function Scene({ positions, collisions, selectedSatId, onSelectSatellite, trail }) {
+export default function Scene({ positions, collisions, selectedSatId, onSelectSatellite, trail, deviationTrail }) {
   const collisionZones = useMemo(() => {
     if (!collisions) return [];
     return collisions.map(c => {
@@ -116,6 +116,13 @@ export default function Scene({ positions, collisions, selectedSatId, onSelectSa
           <OrbitTrail
             points={trail}
             riskLevel={positions?.find(p => p.norad_id === selectedSatId)?.risk_level || 'NONE'}
+          />
+        )}
+
+        {deviationTrail && deviationTrail.length > 0 && (
+          <OrbitTrail
+            points={deviationTrail}
+            riskLevel="SIMULATED"
           />
         )}
 

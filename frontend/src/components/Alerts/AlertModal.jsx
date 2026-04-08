@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { simulateManeuver } from '../../utils/api';
+import { simulateManeuver, recommendManeuver } from '../../utils/api';
 
-export default function AlertModal({ collision, group = 'stations', onClose }) {
+export default function AlertModal({ collision, group = 'stations', onClose, onSimulationComplete }) {
   const [simDeltaH, setSimDeltaH] = useState(5.0);
   const [simLoading, setSimLoading] = useState(false);
   const [simResult, setSimResult] = useState(null);
+  const [recommendLoading, setRecommendLoading] = useState(false);
+  const [isFuelOptimized, setIsFuelOptimized] = useState(false);
 
   if (!collision) return null;
 
@@ -34,6 +36,7 @@ export default function AlertModal({ collision, group = 'stations', onClose }) {
   const handleSimulate = async () => {
     setSimLoading(true);
     setSimResult(null);
+    setIsFuelOptimized(false);
     try {
       const data = await simulateManeuver(
         collision.sat1_norad_id,
@@ -42,11 +45,50 @@ export default function AlertModal({ collision, group = 'stations', onClose }) {
         group
       );
       setSimResult(data);
+      if (data && data.deviation_trail) {
+        onSimulationComplete?.(data.deviation_trail);
+      }
     } catch (err) {
       console.error("Simulation error", err);
       setSimResult({ error: "Failed to run simulation." });
     } finally {
       setSimLoading(false);
+    }
+  };
+
+  const handleRecommend = async () => {
+    setRecommendLoading(true);
+    setSimResult(null);
+    setIsFuelOptimized(false);
+    try {
+      const data = await recommendManeuver(
+        collision.sat1_norad_id,
+        collision.sat2_norad_id,
+        group
+      );
+      if (data.status === 'success') {
+        const optDeltaH = data.optimal_delta_h_km;
+        setSimDeltaH(optDeltaH);
+        setIsFuelOptimized(true);
+        // Automatically run simulation with this optimal delta H
+        const simData = await simulateManeuver(
+          collision.sat1_norad_id,
+          collision.sat2_norad_id,
+          optDeltaH,
+          group
+        );
+        setSimResult(simData);
+        if (simData && simData.deviation_trail) {
+          onSimulationComplete?.(simData.deviation_trail);
+        }
+      } else {
+        setSimResult({ error: data.message });
+      }
+    } catch (err) {
+      console.error("Recommend error", err);
+      setSimResult({ error: "Failed to find optimal maneuver." });
+    } finally {
+      setRecommendLoading(false);
     }
   };
 
@@ -175,7 +217,15 @@ export default function AlertModal({ collision, group = 'stations', onClose }) {
               Simulate Avoidance Maneuver
             </div>
             
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '12px' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '12px' }}>
+              <button 
+                className="time-btn" 
+                style={{ background: 'rgba(34, 197, 94, 0.1)', borderColor: '#22c55e', color: '#22c55e', whiteSpace: 'nowrap', fontSize: '12px' }}
+                onClick={handleRecommend}
+                disabled={recommendLoading || simLoading}
+              >
+                {recommendLoading ? 'Optimizing...' : '✨ Optimize Fuel'}
+              </button>
               <input 
                 type="range" 
                 min="-20" 
@@ -200,7 +250,10 @@ export default function AlertModal({ collision, group = 'stations', onClose }) {
 
             {simResult && !simResult.error && (
               <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid #22c55e', borderRadius: '4px' }}>
-                <div style={{ fontSize: '14px', marginBottom: '8px', color: '#22c55e', fontWeight: 'bold' }}>Simulation Successful</div>
+                <div style={{ fontSize: '14px', marginBottom: '8px', color: '#22c55e', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Simulation Successful</span>
+                  {isFuelOptimized && <span style={{ fontSize: '10px', background: '#22c55e', color: '#000', padding: '2px 6px', borderRadius: '12px' }}>Fuel Optimized</span>}
+                </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-mono)', fontSize: '13px', color: '#e2e8f0' }}>
                   <span>Original Risk: <strong>{collision.risk_score}</strong> ({collision.risk_level})</span>
                   <span>➜</span>

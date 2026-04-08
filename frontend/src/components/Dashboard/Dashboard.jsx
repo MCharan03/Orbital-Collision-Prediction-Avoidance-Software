@@ -37,6 +37,7 @@ export default function Dashboard() {
   const [selectedSat, setSelectedSat] = useState(null);
   const [modalAlert, setModalAlert] = useState(null);
   const [trail, setTrail] = useState(null);
+  const [deviationTrail, setDeviationTrail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
@@ -66,11 +67,11 @@ export default function Dashboard() {
     }
   }, [group]);
 
-  // Initial load + group change
   useEffect(() => {
     setLoading(true);
     setSelectedSat(null);
     setTrail(null);
+    setDeviationTrail(null);
     loadData();
   }, [group, loadData]);
 
@@ -148,6 +149,7 @@ export default function Dashboard() {
             selectedSatId={selectedSat?.norad_id}
             onSelectSatellite={handleSelectSatellite}
             trail={trail}
+            deviationTrail={deviationTrail}
           />
         </ErrorBoundary>
 
@@ -244,7 +246,15 @@ export default function Dashboard() {
       </div>
 
       {modalAlert && (
-        <AlertModal collision={modalAlert} group={group} onClose={() => setModalAlert(null)} />
+        <AlertModal 
+          collision={modalAlert} 
+          group={group} 
+          onClose={() => {
+            setModalAlert(null);
+            setDeviationTrail(null);
+          }} 
+          onSimulationComplete={setDeviationTrail}
+        />
       )}
     </div>
   );

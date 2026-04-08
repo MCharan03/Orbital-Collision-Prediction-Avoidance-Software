@@ -51,6 +51,13 @@ export const simulateManeuver = (satNoradId, targetNoradId, deltaHKm, group = 's
     group: group
   }).then(r => r.data);
 
+export const recommendManeuver = (satNoradId, targetNoradId, group = 'stations') =>
+  api.post('/maneuver/recommend', {
+    sat_norad_id: satNoradId,
+    target_norad_id: targetNoradId,
+    group: group
+  }).then(r => r.data);
+
 // ── Risk ────────────────────────────────────────────────
 export const fetchRisk = (group = 'stations', threshold = 500) =>
   api.get(`/risk?group=${group}&threshold=${threshold}`).then(r => r.data);

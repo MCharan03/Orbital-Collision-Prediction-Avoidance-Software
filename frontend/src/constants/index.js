@@ -12,6 +12,7 @@ export const RISK_COLORS = {
   MEDIUM: '#f59e0b',
   HIGH: '#ef4444',
   NONE: '#64748b',
+  SIMULATED: '#22d3ee',
 };
 
 // Risk glow intensity
