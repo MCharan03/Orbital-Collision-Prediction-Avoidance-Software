@@ -6,35 +6,36 @@ import * as THREE from 'three';
 const EARTH_DAY_URL = 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg';
 const EARTH_NIGHT_URL = 'https://unpkg.com/three-globe/example/img/earth-night.jpg';
 const EARTH_TOPO_URL = 'https://unpkg.com/three-globe/example/img/earth-topology.png';
-const EARTH_CLOUDS_URL = 'https://unpkg.com/three-globe/example/img/earth-water.png';
+const CLOUD_MAP_URL = 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_clouds_2048.png';
 
 /**
- * Earth.jsx — Premium 3D Earth with realistic atmosphere and cloud layer.
+ * Earth.jsx — Premium 3D Earth with realistic atmosphere and cloud layers.
  * 
- * Fixes:
- * - Lowered emissiveIntensity so the day texture isn't washed out
- * - Rewrote atmosphere shader for a soft, realistic Fresnel glow (not a hard ring)
- * - Added animated cloud layer for Digital Twin realism
- * - Tuned material for vibrant oceans and crisp continents
+ * Features:
+ * - Multi-layered globe: Earth surface, cloud layer, and atmosphere.
+ * - Proper material settings for day/night transition.
+ * - Dynamic clouds that rotate at a different speed than the surface.
+ * - Cinematic Fresnel atmosphere glow.
  */
 export default function Earth() {
   const earthRef = useRef();
+  const cloudRef = useRef();
   const atmosphereRef = useRef();
-  const cloudsRef = useRef();
 
   // Load real NASA textures
-  const [dayMap, nightMap, topoMap, cloudsMap] = useLoader(THREE.TextureLoader, [
+  const [dayMap, nightMap, topoMap, cloudMap] = useLoader(THREE.TextureLoader, [
     EARTH_DAY_URL,
     EARTH_NIGHT_URL,
     EARTH_TOPO_URL,
-    EARTH_CLOUDS_URL,
+    CLOUD_MAP_URL
   ]);
 
   // Set proper color space for textures
   useMemo(() => {
     dayMap.colorSpace = THREE.SRGBColorSpace;
     nightMap.colorSpace = THREE.SRGBColorSpace;
-  }, [dayMap, nightMap]);
+    cloudMap.colorSpace = THREE.SRGBColorSpace;
+  }, [dayMap, nightMap, cloudMap]);
 
   // Atmosphere shader — soft Fresnel glow that wraps the globe edge
   const atmosphereMaterial = useMemo(() => {
@@ -57,13 +58,13 @@ export default function Earth() {
         void main() {
           vec3 viewDir = normalize(uCameraPosition - vWorldPosition);
           float fresnel = 1.0 - dot(viewDir, vWorldNormal);
-          fresnel = pow(fresnel, 6.0);
+          fresnel = pow(fresnel, 8.0); // Sharper edge
           fresnel = clamp(fresnel, 0.0, 1.0);
 
-          // Very subtle atmospheric tint
-          vec3 color = vec3(0.15, 0.4, 0.85);
+          // Subtle atmospheric blue tint
+          vec3 color = vec3(0.2, 0.5, 1.0);
 
-          float alpha = fresnel * 0.18;
+          float alpha = fresnel * 0.25;
           gl_FragColor = vec4(color, alpha);
         }
       `,
@@ -81,9 +82,8 @@ export default function Earth() {
     if (earthRef.current) {
       earthRef.current.rotation.y += delta * 0.015;
     }
-    // Cloud layer rotates slightly faster for parallax depth effect
-    if (cloudsRef.current) {
-      cloudsRef.current.rotation.y += delta * 0.025;
+    if (cloudRef.current) {
+      cloudRef.current.rotation.y += delta * 0.025; // Clouds move slightly faster
     }
     // Update camera position uniform for Fresnel calculation
     if (atmosphereMaterial.uniforms) {
@@ -93,37 +93,38 @@ export default function Earth() {
 
   return (
     <group>
-      {/* Earth sphere with real NASA textures */}
+      {/* Earth surface layer */}
       <mesh ref={earthRef}>
         <sphereGeometry args={[1, 128, 128]} />
         <meshStandardMaterial
           map={dayMap}
           emissiveMap={nightMap}
-          emissive={new THREE.Color(0xffcc88)}
-          emissiveIntensity={0.15}
+          emissive={new THREE.Color(0x333333)} // Subtler night lights
+          emissiveIntensity={0.06}
           bumpMap={topoMap}
-          bumpScale={0.03}
-          roughness={0.7}
-          metalness={0.02}
+          bumpScale={0.02}
+          roughness={0.8}
+          metalness={0.01}
         />
       </mesh>
 
-      {/* Cloud layer — slightly larger, independent rotation */}
-      <mesh ref={cloudsRef}>
-        <sphereGeometry args={[1.008, 64, 64]} />
+      {/* Dynamic cloud layer */}
+      <mesh ref={cloudRef}>
+        <sphereGeometry args={[1.015, 64, 64]} />
         <meshStandardMaterial
-          map={cloudsMap}
-          transparent
-          opacity={0.12}
+          map={cloudMap}
+          transparent={true}
+          opacity={0.4}
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
-          side={THREE.DoubleSide}
+          blending={THREE.NormalBlending}
+          roughness={1}
+          metalness={0}
         />
       </mesh>
 
-      {/* Atmosphere glow — razor-thin Fresnel edge */}
+      {/* Atmosphere glow — realistic Rayleigh scattering simulation edge */}
       <mesh ref={atmosphereRef} material={atmosphereMaterial}>
-        <sphereGeometry args={[1.025, 128, 128]} />
+        <sphereGeometry args={[1.035, 128, 128]} />
       </mesh>
     </group>
   );
