@@ -270,6 +270,7 @@ body.full-view-active .global-nav {
   border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 20px;
   z-index: 100;
+  pointer-events: auto; /* Fixes unclickable dropdowns */
   box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 4px 30px rgba(0, 0, 0, 0.3);
   transition: opacity 0.4s var(--ease-out-expo), filter 0.4s var(--ease-out-expo);
 }
@@ -384,6 +385,11 @@ body.full-view-active .global-nav {
   border-color: var(--glass-border-hover);
   box-shadow: 0 0 16px rgba(59, 130, 246, 0.15);
   background: rgba(255, 255, 255, 0.07);
+}
+
+.group-selector select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
 }
 
 /* ══════════════════════════════════════════════════════════

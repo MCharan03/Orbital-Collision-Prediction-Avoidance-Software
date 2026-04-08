@@ -50,14 +50,17 @@ export default function Satellite({ position, name, noradId, altitude, riskLevel
   const baseColor = RISK_COLORS[riskLevel] || RISK_COLORS.NONE;
   const isHighRisk = riskLevel === 'HIGH';
   const isMedium = riskLevel === 'MEDIUM';
+  const isLowRisk = riskLevel === 'LOW';
+  const hasGlow = isHighRisk || isMedium || isLowRisk;
 
   const bloomColor = useMemo(() => {
     const c = new THREE.Color(baseColor);
     if (isHighRisk) c.multiplyScalar(4.0);
     else if (isMedium) c.multiplyScalar(2.0);
-    else c.multiplyScalar(1.2);
+    else if (isLowRisk) c.multiplyScalar(1.2);
+    else c.multiplyScalar(1.0);
     return c;
-  }, [baseColor, isHighRisk, isMedium]);
+  }, [baseColor, isHighRisk, isMedium, isLowRisk]);
 
   const spriteTexture = useMemo(() => getSatelliteTexture(baseColor), [baseColor]);
 
@@ -89,6 +92,16 @@ export default function Satellite({ position, name, noradId, altitude, riskLevel
       const pulse = Math.sin(t * 2) * 0.15 + 1;
       const s = baseScale * pulse * (hovered ? 1.3 : 1);
       spriteRef.current.scale.set(s, s, 1);
+      if (glowRef.current) {
+        glowRef.current.scale.setScalar(pulse * 2.5);
+      }
+    } else if (isLowRisk) {
+      const pulse = Math.sin(t * 1) * 0.05 + 1;
+      const s = baseScale * pulse * (hovered ? 1.2 : 1);
+      spriteRef.current.scale.set(s, s, 1);
+      if (glowRef.current) {
+        glowRef.current.scale.setScalar(pulse * 2.0);
+      }
     } else {
       const s = baseScale * (hovered ? 1.4 : 1);
       spriteRef.current.scale.set(s, s, 1);
@@ -151,15 +164,15 @@ export default function Satellite({ position, name, noradId, altitude, riskLevel
         </Html>
       )}
 
-      {/* Glow sphere for high/medium risk */}
-      {(isHighRisk || isMedium) && (
+      {/* Glow sphere for risk levels */}
+      {hasGlow && (
         <mesh ref={glowRef}>
           <sphereGeometry args={[0.025, 16, 16]} />
           <meshBasicMaterial
             color={bloomColor}
             toneMapped={false}
             transparent
-            opacity={0.2}
+            opacity={isLowRisk ? 0.1 : 0.2}
             depthWrite={false}
             blending={THREE.AdditiveBlending}
           />
