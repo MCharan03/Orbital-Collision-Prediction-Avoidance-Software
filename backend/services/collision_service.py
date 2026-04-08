@@ -109,6 +109,11 @@ def detect_current_collisions(satellites: list[dict],
 
             if distance <= threshold_km:
                 rel_vel = compute_relative_velocity(s1["pos"], s2["pos"])
+                
+                # Ignore docked components (e.g., ISS modules) and identical orbits
+                if distance < 1.0 and rel_vel < 0.01:
+                    continue
+
                 score = calculate_risk_score(distance, rel_vel)
                 level = classify_risk(score)
 
@@ -186,8 +191,30 @@ def predict_closest_approaches(satellites: list[dict],
     # Key: (id1, id2) → {min_dist, tca_time, pos1_at_tca, pos2_at_tca, rel_vel}
     closest = {}
 
-    # Step through time
     current = now
+
+    # Identify docked/identical orbital pairs at t=0 to exclude them entirely
+    docked_pairs = set()
+    initial_positions = {}
+    for sid in sat_ids:
+        pos = propagate_from_satrec(sat_lookup[sid]["satrec"], current)
+        if pos:
+            initial_positions[sid] = pos
+
+    for i in range(len(sat_ids)):
+        if sat_ids[i] not in initial_positions: continue
+        for j in range(i + 1, len(sat_ids)):
+            if sat_ids[j] not in initial_positions: continue
+            id1, id2 = sat_ids[i], sat_ids[j]
+            dist = compute_distance_km(initial_positions[id1], initial_positions[id2])
+            if dist < 1.0:
+                rel_vel = compute_relative_velocity(initial_positions[id1], initial_positions[id2])
+                if rel_vel < 0.01:
+                    docked_pairs.add((id1, id2))
+
+    print(f"[COLLISION] Ignoring {len(docked_pairs)} docked/identical pairs.")
+
+    # Step through time
     total_steps = int((end - now).total_seconds() / step_seconds)
     step_count = 0
 
@@ -217,12 +244,15 @@ def predict_closest_approaches(satellites: list[dict],
                     continue
 
                 id1, id2 = sat_ids[i], sat_ids[j]
+                pair_key = (id1, id2)
+
+                if pair_key in docked_pairs:
+                    continue
+
                 p1 = positions[id1]
                 p2 = positions[id2]
 
                 dist = compute_distance_km(p1, p2)
-
-                pair_key = (id1, id2)
                 if pair_key not in closest or dist < closest[pair_key]["min_dist"]:
                     rel_vel = compute_relative_velocity(p1, p2)
                     closest[pair_key] = {

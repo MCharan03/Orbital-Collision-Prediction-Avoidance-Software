@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 
@@ -57,7 +58,7 @@ export default function AlertModal({ collision, onClose, onSimulateManeuver }) {
     }
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <div className="modal-overlay" onClick={onClose}>
         <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -214,6 +215,7 @@ export default function AlertModal({ collision, onClose, onSimulateManeuver }) {
 
         </div>
       </div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

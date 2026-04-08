@@ -1014,8 +1014,10 @@ body.full-view-active .global-nav {
   -webkit-backdrop-filter: blur(24px);
   z-index: 2000;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  overflow-y: auto;
+  padding: 60px 20px;
   animation: fadeIn 0.25s ease-out;
 }
 
@@ -1034,6 +1036,7 @@ body.full-view-active .global-nav {
   position: relative;
   animation: slideUp 0.35s var(--ease-out-expo);
   overflow: hidden;
+  margin: auto;
 }
 
 /* Glass sheen on modal */
