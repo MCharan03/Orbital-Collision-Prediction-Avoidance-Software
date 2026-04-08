@@ -16,6 +16,7 @@ def read_stream(stream, prefix, color):
         print(f"{color}[{prefix}]{reset} {line.strip()}", flush=True)
 
 def main():
+    sys.stdout.reconfigure(encoding='utf-8')
     print("\033[96m=== Starting Forge-X Pipeline ===\033[0m")
     
     # We use CREATE_NEW_PROCESS_GROUP on Windows to separate signals 

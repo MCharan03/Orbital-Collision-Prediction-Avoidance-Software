@@ -109,6 +109,11 @@ def detect_current_collisions(satellites: list[dict],
 
             if distance <= threshold_km:
                 rel_vel = compute_relative_velocity(s1["pos"], s2["pos"])
+                
+                # Ignore docked components (e.g., ISS modules) and identical orbits
+                if distance < 1.0 and rel_vel < 0.01:
+                    continue
+
                 score = calculate_risk_score(distance, rel_vel)
                 level = classify_risk(score)
 
@@ -227,6 +232,13 @@ def predict_closest_approaches(satellites: list[dict],
                 pair_key = (id1, id2)
                 if pair_key not in closest or dist < closest[pair_key]["min_dist"]:
                     rel_vel = compute_relative_velocity(p1, p2)
+                    
+                    # Ignore docked components (e.g., ISS modules) and identical orbits
+                    if dist < 1.0 and rel_vel < 0.01:
+                        # Add a dummy entry so it doesn't get processed later if needed
+                        closest[pair_key] = {"min_dist": 99999.0, "tca_time": current, "pos1": p1, "pos2": p2, "rel_vel": rel_vel}
+                        continue
+
                     closest[pair_key] = {
                         "min_dist": dist,
                         "tca_time": current,
