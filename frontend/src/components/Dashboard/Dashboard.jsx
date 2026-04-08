@@ -41,6 +41,12 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [timeLoading, setTimeLoading] = useState(false);
+  const [isFullView, setIsFullView] = useState(false);
+
+  useEffect(() => {
+    document.body.classList.toggle('full-view-active', isFullView);
+    return () => document.body.classList.remove('full-view-active');
+  }, [isFullView]);
 
   // ── Data Fetching ──────────────────────────
   const loadData = useCallback(async (timeISO = null) => {
@@ -133,75 +139,107 @@ export default function Dashboard() {
   // ── Main Layout ────────────────────────────
   return (
     <div className="app-layout">
-      <Header
-        group={group}
-        onGroupChange={setGroup}
-        satelliteCount={positions.length}
-        lastUpdate={lastUpdate}
-      />
-
-      <div className="app-main">
-        {/* 3D Globe */}
-        <div className="globe-container">
-          <ErrorBoundary>
-            <Scene
-              positions={positions}
-              collisions={collisions}
-              selectedSatId={selectedSat?.norad_id}
-              onSelectSatellite={handleSelectSatellite}
-              trail={trail}
-            />
-          </ErrorBoundary>
-
-          {/* Globe overlay badges */}
-          <div className="globe-overlay">
-            <div className="overlay-badge">
-              🛰 <span className="count">{positions.length}</span> satellites
-            </div>
-            {collisionSummary && collisionSummary.total_events > 0 && (
-              <div className="overlay-badge" style={{
-                borderColor: collisionSummary.high_risk > 0
-                  ? 'rgba(239, 68, 68, 0.3)'
-                  : 'rgba(245, 158, 11, 0.3)'
-              }}>
-                ⚠ <span className="count" style={{
-                  color: collisionSummary.high_risk > 0 ? '#ef4444' : '#f59e0b'
-                }}>
-                  {collisionSummary.total_events}
-                </span> conjunction events
-              </div>
-            )}
-            {selectedSat && (
-              <div className="overlay-badge" style={{ borderColor: 'rgba(34, 211, 238, 0.3)' }}>
-                📡 <span className="count">{selectedSat.name}</span>
-                <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.6 }}>
-                  Alt: {selectedSat.alt?.toFixed(0)} km
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Time simulation slider */}
-          <TimeSlider onTimeChange={handleTimeChange} isLoading={timeLoading} />
-        </div>
-
-        {/* Right Sidebar */}
-        <div className="sidebar">
-          <StatsPanel
-            satelliteCount={positions.length}
-            collisionSummary={collisionSummary}
-          />
-
-          <AlertsPanel
-            collisions={collisions}
-            onAlertClick={handleAlertClick}
-          />
-
-          <Sidebar
+      {/* Absolute Background Globe */}
+      <div className="globe-container">
+        <ErrorBoundary>
+          <Scene
             positions={positions}
+            collisions={collisions}
             selectedSatId={selectedSat?.norad_id}
             onSelectSatellite={handleSelectSatellite}
+            trail={trail}
           />
+        </ErrorBoundary>
+
+        {/* Globe overlay badges */}
+        <div className="globe-overlay" style={{ opacity: isFullView ? 0 : 1, transition: 'opacity 0.4s', pointerEvents: isFullView ? 'none' : 'auto' }}>
+          <div className="overlay-badge">
+            🛰 <span className="count">{positions.length}</span> satellites
+          </div>
+          {collisionSummary && collisionSummary.total_events > 0 && (
+            <div className="overlay-badge" style={{
+              borderColor: collisionSummary.high_risk > 0
+                ? 'rgba(239, 68, 68, 0.3)'
+                : 'rgba(245, 158, 11, 0.3)'
+            }}>
+              ⚠ <span className="count" style={{
+                color: collisionSummary.high_risk > 0 ? '#ef4444' : '#f59e0b'
+              }}>
+                {collisionSummary.total_events}
+              </span> conjunction events
+            </div>
+          )}
+          {selectedSat && (
+            <div className="overlay-badge" style={{ borderColor: 'rgba(34, 211, 238, 0.3)' }}>
+              📡 <span className="count">{selectedSat.name}</span>
+              <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.6 }}>
+                Alt: {selectedSat.alt?.toFixed(0)} km
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Floating Full View Toggle Button */}
+        <button 
+          className="time-btn" 
+          onClick={() => setIsFullView(!isFullView)}
+          title={isFullView ? "Exit Full View" : "Enter Full View"}
+          style={{ 
+            position: 'absolute', 
+            bottom: 35, 
+            left: '50%', 
+            transform: 'translateX(320px)',
+            zIndex: 60, 
+            fontFamily: 'var(--font-mono)', 
+            padding: '12px 24px', 
+            borderRadius: '24px', 
+            fontSize: '11px', 
+            fontWeight: 'bold',
+            backdropFilter: 'blur(10px)',
+            background: isFullView ? 'rgba(239, 68, 68, 0.2)' : 'rgba(168, 85, 247, 0.2)',
+            border: isFullView ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(168, 85, 247, 0.4)',
+            color: '#fff',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
+          }}
+        >
+          {isFullView ? "✕ Exit Full View" : "⛶ Full View"}
+        </button>
+
+        {/* Time simulation slider */}
+        <TimeSlider onTimeChange={handleTimeChange} isLoading={timeLoading} />
+      </div>
+
+      {/* Floating UI Overlays */}
+      <div className="app-main">
+        <Header
+          group={group}
+          onGroupChange={setGroup}
+          satelliteCount={positions.length}
+          lastUpdate={lastUpdate}
+        />
+
+        <div className="floating-ui-layer">
+          {/* Left Column Widgets */}
+          <div className="floating-left-widgets">
+            <StatsPanel
+              satelliteCount={positions.length}
+              collisionSummary={collisionSummary}
+            />
+          </div>
+
+          {/* Right Column Widgets */}
+          <div className="floating-right-widgets">
+            <AlertsPanel
+              collisions={collisions}
+              onAlertClick={handleAlertClick}
+            />
+
+            <Sidebar
+              positions={positions}
+              selectedSatId={selectedSat?.norad_id}
+              onSelectSatellite={handleSelectSatellite}
+            />
+          </div>
         </div>
       </div>
 
