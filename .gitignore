@@ -1,0 +1,61 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Environments
+venv/
+.env
+.venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Node
+node_modules/
+.npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Vite/Build
+dist/
+.vite/
+.output/
+
+# Logs
+*.log
+
+# Caches
+.cache/
+.pytest_cache/
+.eslintcache
+
+# Local Cache files for Forge-X
+backend/cache/*.json
+
+# Large Binary Files (Optional - but PPTs are okay usually)
+# If PPTs are huge, consider LFS, but for now they're small.
