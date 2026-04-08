@@ -124,10 +124,12 @@ def detect_current_collisions(satellites: list[dict],
                     risk_level=level,
                     sat1_position={
                         "x": s1["pos"]["x"], "y": s1["pos"]["y"], "z": s1["pos"]["z"],
+                        "vx": s1["pos"]["vx"], "vy": s1["pos"]["vy"], "vz": s1["pos"]["vz"],
                         "lat": s1["pos"]["lat"], "lon": s1["pos"]["lon"], "alt": s1["pos"]["alt"],
                     },
                     sat2_position={
                         "x": s2["pos"]["x"], "y": s2["pos"]["y"], "z": s2["pos"]["z"],
+                        "vx": s2["pos"]["vx"], "vy": s2["pos"]["vy"], "vz": s2["pos"]["vz"],
                         "lat": s2["pos"]["lat"], "lon": s2["pos"]["lon"], "alt": s2["pos"]["alt"],
                     },
                 ))
@@ -256,10 +258,12 @@ def predict_closest_approaches(satellites: list[dict],
             risk_level=level,
             sat1_position={
                 "x": data["pos1"]["x"], "y": data["pos1"]["y"], "z": data["pos1"]["z"],
+                "vx": data["pos1"]["vx"], "vy": data["pos1"]["vy"], "vz": data["pos1"]["vz"],
                 "lat": data["pos1"]["lat"], "lon": data["pos1"]["lon"], "alt": data["pos1"]["alt"],
             },
             sat2_position={
                 "x": data["pos2"]["x"], "y": data["pos2"]["y"], "z": data["pos2"]["z"],
+                "vx": data["pos2"]["vx"], "vy": data["pos2"]["vy"], "vz": data["pos2"]["vz"],
                 "lat": data["pos2"]["lat"], "lon": data["pos2"]["lon"], "alt": data["pos2"]["alt"],
             },
         ))

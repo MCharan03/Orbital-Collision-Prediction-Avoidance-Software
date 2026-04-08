@@ -116,12 +116,12 @@ def simulate_maneuver():
             modified_data.append(s)
             
     # Re-run prediction
-    events = predict_closest_approaches(modified_data, hours=hours, step_seconds=60, threshold_km=MONITORING_THRESHOLD_KM)
+    events = predict_closest_approaches(modified_data, hours_ahead=hours, step_seconds=60, threshold_km=MONITORING_THRESHOLD_KM)
     
     # Filter events to just those involving our satellite and the target
     target_events = [e for e in events if (
-        (e.sat1_id == sat_id and e.sat2_id == target_id) or 
-        (e.sat1_id == target_id and e.sat2_id == sat_id)
+        (e.sat1_norad_id == sat_id and e.sat2_norad_id == target_id) or 
+        (e.sat1_norad_id == target_id and e.sat2_norad_id == sat_id)
     )]
     
     # Find the minimum distance approach from that list

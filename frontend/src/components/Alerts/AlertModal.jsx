@@ -138,6 +138,37 @@ export default function AlertModal({ collision, group = 'stations', onClose }) {
              </div>
           </div>
 
+          {/* Orbital Parameters Section */}
+          <div className="modal-explainability" style={{ marginTop: '24px' }}>
+            <div className="modal-section-label" style={{ color: '#a855f7' }}>
+              Orbital Parameters & Telemetry
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '12px' }}>
+              {/* Target 1 */}
+              <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '10px', borderRadius: '6px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#e2e8f0', marginBottom: '8px' }}>{sat1_name}</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'rgba(226, 232, 240, 0.8)', lineHeight: '1.6' }}>
+                  <div><strong>Alt:</strong> {collision.sat1_position?.alt?.toFixed(2)} km</div>
+                  <div><strong>Lat/Lon:</strong> {collision.sat1_position?.lat?.toFixed(4)}°, {collision.sat1_position?.lon?.toFixed(4)}°</div>
+                  <div><strong>Vel (x,y,z):</strong> {collision.sat1_position?.vx?.toFixed(2)}, {collision.sat1_position?.vy?.toFixed(2)}, {collision.sat1_position?.vz?.toFixed(2)} km/s</div>
+                  <div><strong>Pos (x,y,z):</strong> {collision.sat1_position?.x?.toFixed(2)}, {collision.sat1_position?.y?.toFixed(2)}, {collision.sat1_position?.z?.toFixed(2)}</div>
+                </div>
+              </div>
+              
+               {/* Target 2 */}
+              <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '10px', borderRadius: '6px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#e2e8f0', marginBottom: '8px' }}>{sat2_name}</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'rgba(226, 232, 240, 0.8)', lineHeight: '1.6' }}>
+                  <div><strong>Alt:</strong> {collision.sat2_position?.alt?.toFixed(2)} km</div>
+                  <div><strong>Lat/Lon:</strong> {collision.sat2_position?.lat?.toFixed(4)}°, {collision.sat2_position?.lon?.toFixed(4)}°</div>
+                  <div><strong>Vel (x,y,z):</strong> {collision.sat2_position?.vx?.toFixed(2)}, {collision.sat2_position?.vy?.toFixed(2)}, {collision.sat2_position?.vz?.toFixed(2)} km/s</div>
+                  <div><strong>Pos (x,y,z):</strong> {collision.sat2_position?.x?.toFixed(2)}, {collision.sat2_position?.y?.toFixed(2)}, {collision.sat2_position?.z?.toFixed(2)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Maneuver Simulation */}
           <div className="modal-explainability" style={{ marginTop: '24px' }}>
             <div className="modal-section-label" style={{ color: '#22d3ee' }}>
