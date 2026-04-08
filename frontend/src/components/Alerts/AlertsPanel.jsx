@@ -115,6 +115,18 @@ export default function AlertsPanel({ collisions, onAlertClick }) {
                   {formatVelocity(c.relative_velocity_km_s)} <span className="metric-unit">km/s</span>
                 </div>
               </div>
+              <div className="metric-group" style={{ gridColumn: 'span 2' }}>
+                <div className="metric-label">Orbital Speeds (Target 1 / Target 2)</div>
+                <div className="metric-value" style={{ fontSize: '11px', display: 'flex', gap: '8px' }}>
+                  <span>
+                    {c.sat1_position?.vx ? Math.sqrt(c.sat1_position.vx**2 + c.sat1_position.vy**2 + c.sat1_position.vz**2).toFixed(2) : '-'} <span className="metric-unit">km/s</span>
+                  </span>
+                  <span style={{ color: 'var(--text-secondary)' }}>/</span>
+                  <span>
+                    {c.sat2_position?.vx ? Math.sqrt(c.sat2_position.vx**2 + c.sat2_position.vy**2 + c.sat2_position.vz**2).toFixed(2) : '-'} <span className="metric-unit">km/s</span>
+                  </span>
+                </div>
+              </div>
               <div className="metric-group">
                 <div className="metric-label">TCA</div>
                 <div className="metric-value">

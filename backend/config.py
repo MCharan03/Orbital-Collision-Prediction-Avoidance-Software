@@ -13,14 +13,14 @@ CACHE_DIR = os.path.join(os.path.dirname(__file__), "cache")
 
 # ─── SGP4 Propagation ───────────────────────────────────────────
 PROPAGATION_STEP_SECONDS = 60       # Time step for orbit propagation
-PREDICTION_WINDOW_HOURS = 24        # How far ahead to predict
+PREDICTION_WINDOW_HOURS = 72        # How far ahead to predict
 ORBIT_TRAIL_MINUTES = 90            # Orbit trail duration (~ 1 LEO period)
 ORBIT_TRAIL_STEP_SECONDS = 30       # Step size for trail points
 
 # ─── Collision Detection ─────────────────────────────────────────
-COLLISION_THRESHOLD_KM = 50.0       # Critical collision distance
-WARNING_THRESHOLD_KM = 200.0        # Warning distance
-MONITORING_THRESHOLD_KM = 500.0     # Monitoring distance
+COLLISION_THRESHOLD_KM = 5.0        # Critical collision distance
+WARNING_THRESHOLD_KM = 20.0         # Warning distance
+MONITORING_THRESHOLD_KM = 100.0     # Monitoring distance
 
 # ─── Risk Scoring ────────────────────────────────────────────────
 RISK_LEVELS = {
