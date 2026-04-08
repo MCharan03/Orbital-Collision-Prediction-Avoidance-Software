@@ -40,10 +40,11 @@ function getSatelliteTexture(color) {
   return textureCache[color];
 }
 
-export default function Satellite({ position, name, noradId, altitude, riskLevel = 'NONE', riskScore = 0, onClick, isSelected }) {
+export default function Satellite({ position, name, noradId, altitude, riskLevel = 'NONE', riskScore = 0, onClick, isSelected, isAiHighlighted = false }) {
   const spriteRef = useRef();
   const glowRef = useRef();
   const ringRef = useRef();
+  const aiRingRef = useRef();
   const [hovered, setHovered] = useState(false);
 
   const baseColor = RISK_COLORS[riskLevel] || RISK_COLORS.NONE;
@@ -97,6 +98,13 @@ export default function Satellite({ position, name, noradId, altitude, riskLevel
       const ringScale = ((t * 1.2) % 1) * 4 + 1;
       ringRef.current.scale.setScalar(ringScale);
       ringRef.current.material.opacity = 1 - ((t * 1.2) % 1);
+    }
+
+    // AI highlight ring — slow purple pulse
+    if (aiRingRef.current && isAiHighlighted) {
+      const aiPulse = Math.sin(t * 2.5) * 0.5 + 1;
+      aiRingRef.current.scale.setScalar(aiPulse * 2.2);
+      aiRingRef.current.material.opacity = 0.5 + Math.sin(t * 2) * 0.3;
     }
   });
 
@@ -158,15 +166,15 @@ export default function Satellite({ position, name, noradId, altitude, riskLevel
         </mesh>
       )}
 
-      {/* Selection ring */}
-      {isSelected && (
-        <mesh ref={ringRef} rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.02, 0.025, 32]} />
+      {/* AI Highlight ring — purple pulsing halo */}
+      {isAiHighlighted && (
+        <mesh ref={aiRingRef} rotation={[Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.03, 0.038, 48]} />
           <meshBasicMaterial
-            color={bloomColor}
+            color={new THREE.Color('#a855f7').multiplyScalar(3)}
             toneMapped={false}
             transparent
-            opacity={0.8}
+            opacity={0.7}
             side={THREE.DoubleSide}
             depthWrite={false}
             blending={THREE.AdditiveBlending}

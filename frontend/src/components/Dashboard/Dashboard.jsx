@@ -6,6 +6,7 @@ import Sidebar from '../Sidebar/Sidebar';
 import StatsPanel from './StatsPanel';
 import AlertsPanel from '../Alerts/AlertsPanel';
 import AlertModal from '../Alerts/AlertModal';
+import TrafficManagerAI from '../UI/TrafficManagerAI';
 import { fetchDashboard, fetchTrail } from '../../utils/api';
 
 class ErrorBoundary extends Component {
@@ -42,6 +43,7 @@ export default function Dashboard() {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [timeLoading, setTimeLoading] = useState(false);
   const [isFullView, setIsFullView] = useState(false);
+  const [aiHighlightedIds, setAiHighlightedIds] = useState([]);
 
   useEffect(() => {
     document.body.classList.toggle('full-view-active', isFullView);
@@ -148,6 +150,7 @@ export default function Dashboard() {
             selectedSatId={selectedSat?.norad_id}
             onSelectSatellite={handleSelectSatellite}
             trail={trail}
+            aiHighlightedIds={aiHighlightedIds}
           />
         </ErrorBoundary>
 
@@ -246,6 +249,16 @@ export default function Dashboard() {
       {modalAlert && (
         <AlertModal collision={modalAlert} onClose={() => setModalAlert(null)} />
       )}
+
+      {/* Anti-Gravity Traffic Manager AI */}
+      <TrafficManagerAI
+        satelliteContext={positions}
+        onHighlightSatellites={(ids) => {
+          setAiHighlightedIds(ids);
+          // Auto-clear highlights after 12s
+          setTimeout(() => setAiHighlightedIds([]), 12000);
+        }}
+      />
     </div>
   );
 }

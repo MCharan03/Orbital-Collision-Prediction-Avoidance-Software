@@ -48,7 +48,7 @@ function CameraRig({ selectedSatId, positions }) {
   );
 }
 
-export default function Scene({ positions, collisions, selectedSatId, onSelectSatellite, trail }) {
+export default function Scene({ positions, collisions, selectedSatId, onSelectSatellite, trail, aiHighlightedIds = [] }) {
   const collisionZones = useMemo(() => {
     if (!collisions) return [];
     return collisions.map(c => {
@@ -108,6 +108,7 @@ export default function Scene({ positions, collisions, selectedSatId, onSelectSa
             riskLevel={sat.risk_level || 'NONE'}
             riskScore={sat.risk_score || 0}
             isSelected={selectedSatId === sat.norad_id}
+            isAiHighlighted={aiHighlightedIds.includes(sat.norad_id)}
             onClick={() => onSelectSatellite?.(sat)}
           />
         ))}
