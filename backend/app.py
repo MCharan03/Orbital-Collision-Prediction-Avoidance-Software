@@ -18,6 +18,9 @@ from routes.risk_routes import risk_bp
 from routes.dashboard_routes import dashboard_bp
 from routes.ml_routes import ml_bp
 from routes.feed_routes import feed_bp
+from routes.aswan_routes import aswan_bp
+from routes.traffic_manager_routes import traffic_manager_bp
+from routes.cascade_routes import cascade_bp
 from routes.resolver_routes import resolver_bp
 from routes.forecast_routes import forecast_bp
 
@@ -36,6 +39,9 @@ def create_app():
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(ml_bp)
     app.register_blueprint(feed_bp)
+    app.register_blueprint(aswan_bp)
+    app.register_blueprint(traffic_manager_bp)
+    app.register_blueprint(cascade_bp)
     app.register_blueprint(resolver_bp)
     app.register_blueprint(forecast_bp)
 
