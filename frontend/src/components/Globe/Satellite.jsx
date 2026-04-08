@@ -40,23 +40,50 @@ function getSatelliteTexture(color) {
   return textureCache[color];
 }
 
-export default function Satellite({ position, name, noradId, altitude, velocity, riskLevel = 'NONE', riskScore = 0, onClick, isSelected }) {
+export default function Satellite({ 
+  position, 
+  name, 
+  noradId, 
+  altitude, 
+  velocity,
+  riskLevel = 'NONE', 
+  riskScore = 0, 
+  onClick, 
+  isSelected, 
+  isAiHighlighted = false 
+}) {
+  const groupRef = useRef();
   const spriteRef = useRef();
   const glowRef = useRef();
   const ringRef = useRef();
+  const aiRingRef = useRef();
   const [hovered, setHovered] = useState(false);
+
+  // Smooth position interpolation — satellites glide instead of jumping
+  const targetPos = useRef(new THREE.Vector3(...(position || [0, 0, 0])));
+  const currentPos = useRef(new THREE.Vector3(...(position || [0, 0, 0])));
+
+  // Update target when new position arrives from backend
+  useMemo(() => {
+    if (position && position.length >= 3) {
+      targetPos.current.set(position[0], position[1], position[2]);
+    }
+  }, [position]);
 
   const baseColor = RISK_COLORS[riskLevel] || RISK_COLORS.NONE;
   const isHighRisk = riskLevel === 'HIGH';
   const isMedium = riskLevel === 'MEDIUM';
+  const isLowRisk = riskLevel === 'LOW';
+  const hasGlow = isHighRisk || isMedium || isLowRisk;
 
   const bloomColor = useMemo(() => {
     const c = new THREE.Color(baseColor);
     if (isHighRisk) c.multiplyScalar(4.0);
     else if (isMedium) c.multiplyScalar(2.0);
-    else c.multiplyScalar(1.2);
+    else if (isLowRisk) c.multiplyScalar(1.2);
+    else c.multiplyScalar(1.0);
     return c;
-  }, [baseColor, isHighRisk, isMedium]);
+  }, [baseColor, isHighRisk, isMedium, isLowRisk]);
 
   const spriteTexture = useMemo(() => getSatelliteTexture(baseColor), [baseColor]);
 
@@ -83,9 +110,15 @@ export default function Satellite({ position, name, noradId, altitude, velocity,
   }, [velocity]);
 
   useFrame((state) => {
+    // Smooth position interpolation — lerp toward target
+    if (groupRef.current) {
+      currentPos.current.lerp(targetPos.current, 0.08);
+      groupRef.current.position.copy(currentPos.current);
+    }
+
     if (!spriteRef.current) return;
     const t = state.clock.elapsedTime;
-    const baseScale = 0.045; // reduced back to normal
+    const baseScale = 0.045; 
 
     if (isHighRisk) {
       const pulse = Math.sin(t * 5) * 0.4 + 1;
@@ -99,6 +132,16 @@ export default function Satellite({ position, name, noradId, altitude, velocity,
       const pulse = Math.sin(t * 2) * 0.15 + 1;
       const s = baseScale * pulse * (hovered ? 1.3 : 1);
       spriteRef.current.scale.set(s, s, 1);
+      if (glowRef.current) {
+        glowRef.current.scale.setScalar(pulse * 2.5);
+      }
+    } else if (isLowRisk) {
+      const pulse = Math.sin(t * 1) * 0.05 + 1;
+      const s = baseScale * pulse * (hovered ? 1.2 : 1);
+      spriteRef.current.scale.set(s, s, 1);
+      if (glowRef.current) {
+        glowRef.current.scale.setScalar(pulse * 2.0);
+      }
     } else {
       const s = baseScale * (hovered ? 1.4 : 1);
       spriteRef.current.scale.set(s, s, 1);
@@ -109,12 +152,19 @@ export default function Satellite({ position, name, noradId, altitude, velocity,
       ringRef.current.scale.setScalar(ringScale);
       ringRef.current.material.opacity = 1 - ((t * 1.2) % 1);
     }
+
+    // AI highlight ring — slow purple pulse
+    if (aiRingRef.current && isAiHighlighted) {
+      const aiPulse = Math.sin(t * 2.5) * 0.5 + 1;
+      aiRingRef.current.scale.setScalar(aiPulse * 2.2);
+      aiRingRef.current.material.opacity = 0.5 + Math.sin(t * 2) * 0.3;
+    }
   });
 
   if (!position || position.length < 3) return null;
 
   return (
-    <group position={position}>
+    <group ref={groupRef}>
       {/* Satellite icon sprite */}
       <sprite
         ref={spriteRef}
@@ -174,15 +224,15 @@ export default function Satellite({ position, name, noradId, altitude, velocity,
         />
       )}
 
-      {/* Glow sphere for high/medium risk */}
-      {(isHighRisk || isMedium) && (
+      {/* Glow sphere for risk levels */}
+      {hasGlow && (
         <mesh ref={glowRef}>
           <sphereGeometry args={[0.025, 16, 16]} />
           <meshBasicMaterial
             color={bloomColor}
             toneMapped={false}
             transparent
-            opacity={0.2}
+            opacity={isLowRisk ? 0.1 : 0.2}
             depthWrite={false}
             blending={THREE.AdditiveBlending}
           />
@@ -198,6 +248,22 @@ export default function Satellite({ position, name, noradId, altitude, velocity,
             toneMapped={false}
             transparent
             opacity={0.8}
+            side={THREE.DoubleSide}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
+        </mesh>
+      )}
+
+      {/* AI Highlight ring — purple pulsing halo */}
+      {isAiHighlighted && (
+        <mesh ref={aiRingRef} rotation={[Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.03, 0.038, 48]} />
+          <meshBasicMaterial
+            color={new THREE.Color('#a855f7').multiplyScalar(3)}
+            toneMapped={false}
+            transparent
+            opacity={0.7}
             side={THREE.DoubleSide}
             depthWrite={false}
             blending={THREE.AdditiveBlending}

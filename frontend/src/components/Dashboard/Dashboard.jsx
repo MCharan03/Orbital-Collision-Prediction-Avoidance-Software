@@ -6,9 +6,18 @@ import Sidebar from '../Sidebar/Sidebar';
 import StatsPanel from './StatsPanel';
 import AlertsPanel from '../Alerts/AlertsPanel';
 import AlertModal from '../Alerts/AlertModal';
+import ASWANPanel from '../ASWAN/ASWANPanel';
+import TrafficManagerAI from '../UI/TrafficManagerAI';
 import NegotiationFeed from '../Alerts/NegotiationFeed';
 import ForecastPanel from '../Forecast/ForecastPanel';
-import { fetchDashboard, fetchTrail, fetchAutoResolutions, fetchForecast } from '../../utils/api';
+import { 
+  fetchDashboard, 
+  fetchTrail, 
+  fetchSpaceWeather, 
+  fetchNetworkStatus,
+  fetchAutoResolutions, 
+  fetchForecast 
+} from '../../utils/api';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -56,6 +65,15 @@ export default function Dashboard() {
   const [dtLabels, setDtLabels] = useState(true);
   const [dtRotate, setDtRotate] = useState(true);
 
+  // ── ASWAN State ────────────────────────────
+  const [weatherData, setWeatherData] = useState(null);
+  const [networkData, setNetworkData] = useState(null);
+  const [weatherZones, setWeatherZones] = useState([]);
+
+  // ── Traffic Manager AI State ───────────────
+  const [aiHighlightedIds, setAiHighlightedIds] = useState([]);
+  const [simulatedManeuver, setSimulatedManeuver] = useState(null);
+
   useEffect(() => {
     document.body.classList.toggle('full-view-active', isFullView);
     return () => document.body.classList.remove('full-view-active');
@@ -76,6 +94,26 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
       setTimeLoading(false);
+    }
+  }, [group]);
+
+  // ── ASWAN Data Fetching ────────────────────
+  const loadASWAN = useCallback(async (timeISO = null) => {
+    try {
+      const [weather, network] = await Promise.all([
+        fetchSpaceWeather(group, timeISO).catch(() => null),
+        fetchNetworkStatus(group, timeISO).catch(() => null),
+      ]);
+
+      if (weather) {
+        setWeatherData(weather);
+        setWeatherZones(weather.risk_zones || []);
+      }
+      if (network) {
+        setNetworkData(network);
+      }
+    } catch (err) {
+      console.error('[ASWAN] Failed to load ASWAN data:', err);
     }
   }, [group]);
 
@@ -100,19 +138,22 @@ export default function Dashboard() {
     setDeviationTrail(null);
     setForecast(null);
     loadData();
+    loadASWAN();
     loadForecast();
-  }, [group, loadData]);
+  }, [group, loadData, loadASWAN]);
 
-  // Auto-refresh every 60 seconds
+  // Auto-refresh every 15 seconds for near-real-time satellite movement
   useEffect(() => {
-    const interval = setInterval(() => loadData(), 60000);
+    const interval = setInterval(() => {
+      loadData();
+      loadASWAN();
+    }, 15000);
     return () => clearInterval(interval);
-  }, [loadData]);
+  }, [loadData, loadASWAN]);
 
   // ── Satellite Selection ────────────────────
   const handleSelectSatellite = useCallback(async (sat) => {
     setSelectedSat(sat);
-    // Fetch orbit trail for selected satellite
     try {
       const data = await fetchTrail(sat.norad_id, group, 90);
       setTrail(data.trail || []);
@@ -125,16 +166,21 @@ export default function Dashboard() {
   // ── Time Slider ────────────────────────────
   const handleTimeChange = useCallback((newTime) => {
     setTimeLoading(true);
-    loadData(newTime.toISOString());
-  }, [loadData]);
+    const iso = newTime.toISOString();
+    loadData(iso);
+    loadASWAN(iso);
+  }, [loadData, loadASWAN]);
 
   // ── Alert Click ────────────────────────────
   const handleAlertClick = useCallback((collision) => {
-    // Find sat1 in positions and select it
     const sat = positions.find(p => p.norad_id === collision.sat1_norad_id);
     if (sat) handleSelectSatellite(sat);
     setModalAlert(collision);
   }, [positions, handleSelectSatellite]);
+
+  const handleSimulateManeuver = useCallback((maneuver, collision) => {
+    setSimulatedManeuver({ maneuver, collision });
+  }, []);
 
   const handleAutoResolve = async () => {
     setResolvingLoading(true);
@@ -190,6 +236,9 @@ export default function Dashboard() {
             selectedSatId={selectedSat?.norad_id}
             onSelectSatellite={handleSelectSatellite}
             trail={trail}
+            weatherZones={weatherZones}
+            aiHighlightedIds={aiHighlightedIds}
+            simulatedManeuver={simulatedManeuver}
             deviationTrail={deviationTrail}
             showGrid={dtGrid}
             showBeams={dtBeams}
@@ -218,6 +267,15 @@ export default function Dashboard() {
               }}>
                 {collisionSummary.total_events}
               </span> conjunction events
+            </div>
+          )}
+          {weatherData && weatherData.active_event_count > 0 && (
+            <div className="overlay-badge" style={{
+              borderColor: 'rgba(255, 107, 53, 0.3)'
+            }}>
+              ⚡ <span className="count" style={{ color: '#ff6b35' }}>
+                {weatherData.active_event_count}
+              </span> weather events
             </div>
           )}
           {selectedSat && (
@@ -320,6 +378,13 @@ export default function Dashboard() {
             <StatsPanel
               satelliteCount={positions.length}
               collisionSummary={collisionSummary}
+              weatherData={weatherData}
+              networkData={networkData}
+            />
+            {/* ASWAN Panel below stats */}
+            <ASWANPanel
+              weatherData={weatherData}
+              networkData={networkData}
             />
             <ForecastPanel
               forecast={forecast}
@@ -342,13 +407,16 @@ export default function Dashboard() {
             <AlertsPanel
               collisions={collisions}
               onAlertClick={handleAlertClick}
+              weatherEvents={weatherData?.events}
             />
 
-            <Sidebar
-              positions={positions}
-              selectedSatId={selectedSat?.norad_id}
-              onSelectSatellite={handleSelectSatellite}
-            />
+            <div className="sidebar" style={{ flex: 1, minHeight: 0 }}>
+              <Sidebar
+                positions={positions}
+                selectedSatId={selectedSat?.norad_id}
+                onSelectSatellite={handleSelectSatellite}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -360,10 +428,21 @@ export default function Dashboard() {
           onClose={() => {
             setModalAlert(null);
             setDeviationTrail(null);
+            setSimulatedManeuver(null);
           }} 
+          onSimulateManeuver={handleSimulateManeuver}
           onSimulationComplete={setDeviationTrail}
         />
       )}
+
+      {/* Anti-Gravity Traffic Manager AI */}
+      <TrafficManagerAI
+        satelliteContext={positions}
+        onHighlightSatellites={(ids) => {
+          setAiHighlightedIds(ids);
+          setTimeout(() => setAiHighlightedIds([]), 12000);
+        }}
+      />
 
       {resolutions && (
         <NegotiationFeed resolutions={resolutions} onClose={() => setResolutions(null)} />

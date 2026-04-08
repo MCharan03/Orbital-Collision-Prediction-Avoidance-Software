@@ -13,8 +13,8 @@ const CLOUD_MAP_URL = 'https://raw.githubusercontent.com/mrdoob/three.js/master/
  * 
  * Features:
  * - Multi-layered globe: Earth surface, cloud layer, and atmosphere.
- * - Proper material settings for day/night transition.
- * - Dynamic clouds that rotate at a different speed than the surface.
+ * - ECEF Fixed: Earth does NOT rotate (rotation already accounted for in backend coords).
+ * - Dynamic clouds that drift slowly for parallax depth.
  * - Cinematic Fresnel atmosphere glow.
  */
 export default function Earth() {
@@ -79,12 +79,15 @@ export default function Earth() {
   }, []);
 
   useFrame(({ camera }, delta) => {
-    if (earthRef.current) {
-      earthRef.current.rotation.y += delta * 0.015;
-    }
+    // Note: Earth surface (earthRef) does NOT rotate.
+    // Satellite positions are in ECEF (Earth-Centered, Earth-Fixed),
+    // meaning the Earth stays still while satellites move relative to it.
+    
+    // However, we allow clouds to slowly drift for visual 'life'
     if (cloudRef.current) {
-      cloudRef.current.rotation.y += delta * 0.025; // Clouds move slightly faster
+      cloudRef.current.rotation.y += delta * 0.005;
     }
+    
     // Update camera position uniform for Fresnel calculation
     if (atmosphereMaterial.uniforms) {
       atmosphereMaterial.uniforms.uCameraPosition.value.copy(camera.position);
@@ -93,13 +96,13 @@ export default function Earth() {
 
   return (
     <group>
-      {/* Earth surface layer */}
+      {/* Earth surface layer (STATIONARY for ECEF alignment) */}
       <mesh ref={earthRef}>
         <sphereGeometry args={[1, 128, 128]} />
         <meshStandardMaterial
           map={dayMap}
           emissiveMap={nightMap}
-          emissive={new THREE.Color(0x333333)} // Subtler night lights
+          emissive={new THREE.Color(0x333333)}
           emissiveIntensity={0.06}
           bumpMap={topoMap}
           bumpScale={0.02}
@@ -108,7 +111,7 @@ export default function Earth() {
         />
       </mesh>
 
-      {/* Dynamic cloud layer */}
+      {/* Dynamic cloud layer (Drifting) */}
       <mesh ref={cloudRef}>
         <sphereGeometry args={[1.015, 64, 64]} />
         <meshStandardMaterial
