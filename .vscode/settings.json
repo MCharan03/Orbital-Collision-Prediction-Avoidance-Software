@@ -1,0 +1,5 @@
+{
+    "liveshare.connectionMode": "direct",
+    "liveshare.allowGuestDebugControl": true,
+    "liveshare.allowGuestTaskControl": true
+}

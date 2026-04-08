@@ -162,26 +162,74 @@ body {
 
 /* ── Layout ────────────────────────────────────────────── */
 .app-layout {
-  display: flex;
-  flex-direction: column;
+  display: block;
   width: 100%;
   height: 100vh;
   position: relative;
   z-index: 1;
+  overflow: hidden;
 }
 
 .app-main {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
   display: flex;
-  flex: 1;
-  overflow: hidden;
-  position: relative;
+  justify-content: space-between;
 }
 
 .globe-container {
-  flex: 1;
-  position: relative;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   overflow: hidden;
+  pointer-events: auto;
 }
+
+.floating-ui-layer {
+  position: absolute;
+  inset: 20px;
+  pointer-events: none;
+  z-index: 50;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  top: calc(var(--header-height) + 40px);
+  transition: opacity 0.4s var(--ease-out-expo), filter 0.4s var(--ease-out-expo);
+}
+
+.floating-left-widgets {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: var(--sidebar-width);
+  height: 100%;
+  pointer-events: none;
+}
+
+.floating-right-widgets {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: var(--sidebar-width);
+  height: 100%;
+  pointer-events: none;
+}
+
+.floating-left-widgets > *, .floating-right-widgets > * {
+  pointer-events: auto;
+}
+
+body.full-view-active .floating-ui-layer,
+body.full-view-active .header,
+body.full-view-active .time-slider-container,
+body.full-view-active .global-nav {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  filter: blur(10px);
+}
+
 
 /* ══════════════════════════════════════════════════════════
    GLASSMORPHISM CORE SYSTEM
@@ -207,6 +255,10 @@ body {
 
 /* ── Header ────────────────────────────────────────────── */
 .header {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: 20px;
   height: var(--header-height);
   display: flex;
   align-items: center;
@@ -215,9 +267,11 @@ body {
   background: rgba(10, 15, 30, 0.50);
   backdrop-filter: var(--glass-blur-heavy);
   -webkit-backdrop-filter: var(--glass-blur-heavy);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 20px;
   z-index: 100;
   box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 4px 30px rgba(0, 0, 0, 0.3);
+  transition: opacity 0.4s var(--ease-out-expo), filter 0.4s var(--ease-out-expo);
 }
 
 .header-brand {
@@ -1098,7 +1152,7 @@ body {
    ══════════════════════════════════════════════════════════ */
 .global-nav {
   position: fixed;
-  top: 14px;
+  top: 94px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
