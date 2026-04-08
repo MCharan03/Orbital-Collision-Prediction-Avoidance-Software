@@ -6,25 +6,28 @@ import * as THREE from 'three';
 const EARTH_DAY_URL = 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg';
 const EARTH_NIGHT_URL = 'https://unpkg.com/three-globe/example/img/earth-night.jpg';
 const EARTH_TOPO_URL = 'https://unpkg.com/three-globe/example/img/earth-topology.png';
+const EARTH_CLOUDS_URL = 'https://unpkg.com/three-globe/example/img/earth-water.png';
 
 /**
- * Earth.jsx — Premium 3D Earth with realistic atmosphere.
+ * Earth.jsx — Premium 3D Earth with realistic atmosphere and cloud layer.
  * 
  * Fixes:
  * - Lowered emissiveIntensity so the day texture isn't washed out
  * - Rewrote atmosphere shader for a soft, realistic Fresnel glow (not a hard ring)
- * - Removed bad cloud layer (water.png was wrong texture)
+ * - Added animated cloud layer for Digital Twin realism
  * - Tuned material for vibrant oceans and crisp continents
  */
 export default function Earth() {
   const earthRef = useRef();
   const atmosphereRef = useRef();
+  const cloudsRef = useRef();
 
   // Load real NASA textures
-  const [dayMap, nightMap, topoMap] = useLoader(THREE.TextureLoader, [
+  const [dayMap, nightMap, topoMap, cloudsMap] = useLoader(THREE.TextureLoader, [
     EARTH_DAY_URL,
     EARTH_NIGHT_URL,
     EARTH_TOPO_URL,
+    EARTH_CLOUDS_URL,
   ]);
 
   // Set proper color space for textures
@@ -78,6 +81,10 @@ export default function Earth() {
     if (earthRef.current) {
       earthRef.current.rotation.y += delta * 0.015;
     }
+    // Cloud layer rotates slightly faster for parallax depth effect
+    if (cloudsRef.current) {
+      cloudsRef.current.rotation.y += delta * 0.025;
+    }
     // Update camera position uniform for Fresnel calculation
     if (atmosphereMaterial.uniforms) {
       atmosphereMaterial.uniforms.uCameraPosition.value.copy(camera.position);
@@ -98,6 +105,19 @@ export default function Earth() {
           bumpScale={0.03}
           roughness={0.7}
           metalness={0.02}
+        />
+      </mesh>
+
+      {/* Cloud layer — slightly larger, independent rotation */}
+      <mesh ref={cloudsRef}>
+        <sphereGeometry args={[1.008, 64, 64]} />
+        <meshStandardMaterial
+          map={cloudsMap}
+          transparent
+          opacity={0.12}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          side={THREE.DoubleSide}
         />
       </mesh>
 

@@ -1,0 +1,311 @@
+================================================================================
+  FORGE-X — AI-Based Autonomous Space Traffic Management System
+  Complete Feature List
+================================================================================
+
+
+1. IMMERSIVE 3D DIGITAL TWIN
+--------------------------------------------------------------------------------
+   - Real-time 3D Earth globe with NASA Blue Marble textures (day/night/topology)
+   - Realistic Fresnel atmosphere shader with soft edge glow
+   - Animated cloud layer with independent rotation for depth parallax
+   - Deep-field star background (6000 stars) with fade animation
+   - Ambient floating space dust particles for cinematic depth
+   - Orbital reference grid (latitude/longitude lines every 30°)
+   - Bright cyan equatorial ring at 0° latitude
+   - LEO altitude shell (400 km) and MEO altitude shell (2000 km) wireframes
+   - Space density field — translucent shells at crowded altitude bands
+   - Cinematic auto-rotate camera when idle (no satellite selected)
+   - Smooth camera focus transition when selecting a satellite
+   - Post-processing: Bloom, Vignette for cinematic quality
+   - ACES Filmic tone mapping for realistic lighting
+   - Three-point cinematic lighting (key/fill/rim)
+   - Toggle controls for Grid, Beams, Labels, and Auto-Rotate
+
+
+2. REAL-TIME SATELLITE TRACKING
+--------------------------------------------------------------------------------
+   - Fetches live TLE (Two-Line Element) data from CelesTrak API
+   - SGP4 orbital propagation for accurate position computation
+   - Supports 10 satellite constellation groups:
+       • Space Stations
+       • Active Satellites
+       • Starlink
+       • GPS Operational
+       • Galileo
+       • Weather
+       • Science
+       • Earth Resources
+       • Last 30 Days launches
+       • Geostationary
+   - Satellite emoji sprites (🛰️) with risk-based coloring
+   - Hover tooltips showing: Name, NORAD ID, Altitude, Risk Level, Score, Velocity
+   - Velocity direction arrow visible on hover/selection
+   - Satellite search by name or NORAD ID
+   - Scrollable satellite list with glassmorphic cards
+   - Per-satellite risk badges (LOW / MEDIUM / HIGH)
+   - Animated selection ring (expanding pulse) on selected satellite
+   - Glow sphere for medium/high risk satellites
+   - Pulsing animation for high-risk satellite markers
+   - Orbit trail visualization when a satellite is selected (90-minute path)
+   - Orbit trail glow layer for enhanced visibility
+
+
+3. COLLISION DETECTION & PREDICTION
+--------------------------------------------------------------------------------
+   - Pairwise distance computation in TEME (True Equator Mean Equinox) frame
+   - Relative velocity magnitude calculation between satellite pairs
+   - Current-time collision detection at configurable threshold (default: 500 km)
+   - Predictive closest approach tracking over 24-hour window
+   - Time-of-Closest-Approach (TCA) computation
+   - Multi-step time propagation with configurable step size
+   - Co-location filter for ISS modules (ISS, Zarya, Zvezda, Unity, etc.)
+   - Co-location filter for CSS modules (Tianhe, Wentian, Mengtian, etc.)
+   - Collision events sorted by risk score (highest first)
+   - Collision summary: total events, high/medium/low risk counts
+
+
+4. DUAL-MODEL RISK ASSESSMENT (Physics + AI)
+--------------------------------------------------------------------------------
+   - Physics-based risk scoring (SGP4 propagation model)
+   - AI/ML risk prediction model with independent scoring
+   - Risk classification: LOW / MEDIUM / HIGH
+   - Confidence score for AI predictions (0-100%)
+   - Model disagreement detection (when Physics and AI disagree)
+   - Explainability — "Why AI Predicted This" with reason list
+   - Combined final risk level from both models
+   - Per-satellite risk mapping from collision events
+
+
+5. COLLISION ALERTS PANEL
+--------------------------------------------------------------------------------
+   - Glassmorphic alert cards sorted by risk severity
+   - Dual risk badge display: PHY (Physics) + AI scores
+   - AI confidence percentage badge
+   - AI Insight badge (✨ AI) when models disagree
+   - Min distance display (meters or km)
+   - Relative velocity display (km/s)
+   - Orbital speeds for both targets
+   - Time-of-Closest-Approach countdown (e.g., "in 2h 15m")
+   - Final combined risk level
+   - Staggered spring animations for card entrance
+   - "ALL CLEAR" empty state with shield icon
+
+
+6. COLLISION INTELLIGENCE REPORT (Alert Modal)
+--------------------------------------------------------------------------------
+   - Detailed modal for each collision event
+   - Dual model comparison cards (Physics vs AI)
+   - AI confidence meter with color-coded progress bar
+   - Model disagreement alert badge
+   - AI explainability section with reason list
+   - Bottom metrics: Min Distance, Relative Velocity, TCA
+   - Full orbital parameters & telemetry for both satellites:
+       • Altitude (km)
+       • Latitude / Longitude (degrees)
+       • Velocity vector (vx, vy, vz) in km/s
+       • Position vector (x, y, z)
+
+
+7. ORBITAL MANEUVER SIMULATION
+--------------------------------------------------------------------------------
+   - Interactive altitude change slider (-20 km to +20 km)
+   - "Run Simulation" to test a manual delta-H maneuver
+   - "✨ Optimize Fuel" — AI-recommended optimal delta-H
+   - Simulation result: original risk → new risk comparison
+   - New minimum distance after maneuver
+   - Deviation trail visualization on the 3D globe (cyan dashed line)
+   - Fuel-optimized badge when using AI recommendation
+   - Step sequence optimization: tests 0.5, 1, 2, 3, 5, 10 km increments
+
+
+8. AUTONOMOUS COLLISION RESOLVER
+--------------------------------------------------------------------------------
+   - One-click "AUTONOMOUS RESOLUTION START" button
+   - Automated negotiation protocol between satellite pairs
+   - Priority-based yielding logic:
+       • CREWED satellites (ISS, CSS, Dragon, Soyuz) — highest priority (100)
+       • SCIENCE satellites (Hubble, GOES, NOAA) — high priority (80)
+       • COMMERCIAL satellites (Starlink, OneWeb, Iridium) — medium priority (60)
+       • DEFAULT — baseline priority (40)
+   - Fuel-state simulation (deterministic mock based on NORAD ID hash)
+   - Tie-breaking: higher fuel reserves must yield
+   - Autonomous maneuver calculation for yielding satellite
+   - Human operator escalation for unresolvable conflicts
+
+
+9. AUTONOMOUS NEGOTIATION FEED
+--------------------------------------------------------------------------------
+   - Real-time streaming terminal-style log feed
+   - Color-coded log entries:
+       • [NEGOTIATE] — Purple: evaluation and scanning
+       • [DECISION] — Yellow: priority decisions
+       • [SIMULATE] — Cyan: maneuver calculations
+       • [ACTION] — Green (bold): final actions taken
+       • [CRITICAL] — Red (bold): escalation alerts
+   - System boot logs (resolver initialization)
+   - Per-event assessment: pair names, distances, velocities, tiers, fuel
+   - Resolution summary: processed count, active maneuvers, monitoring-only
+   - Sequential log streaming with 400ms delay for dramatic effect
+   - Auto-scroll to latest entry
+   - Glassmorphic floating panel with close button
+
+
+10. 3D COLLISION VISUALIZATION
+--------------------------------------------------------------------------------
+    - Collision zone markers at midpoint between collision pairs
+    - Dual expanding sphere rings (staggered phase)
+    - Triple shockwave ripple rings on different rotation axes
+    - Hexagonal shield glow for HIGH-risk zones
+    - Bright bloom-compatible core node
+    - Animated collision beams connecting satellite pairs:
+        • Dashed line between sat1 and sat2
+        • Color matches risk level (red/amber/green)
+        • Secondary glow line for emphasis
+        • Glowing midpoint sphere
+    - 3D floating telemetry labels for selected/high-risk satellites:
+        • Satellite name with risk badge
+        • Altitude, velocity, risk score metrics
+        • Tether line connecting label to satellite position
+        • Glassmorphic card with fade-in animation
+
+
+11. 24-HOUR PREDICTIVE FORECAST
+--------------------------------------------------------------------------------
+    - Full 24-hour orbital prediction with configurable time steps
+    - Interactive timeline bar chart (risk score per hour)
+    - Compact heatmap row (color-coded cells per hour)
+    - Hover tooltips per hour: risk level, score, event count, closest approach
+    - Peak Risk Hour alert card with:
+        • Peak time offset (T+Xh)
+        • Peak risk score
+        • Closest pair names
+        • Closest approach distance
+        • Event count in window
+    - Trend analysis: ESCALATING / STABLE / DE-ESCALATING
+    - Forecast summary stats:
+        • Hours at HIGH risk
+        • Hours at MEDIUM risk
+        • Hours CLEAR
+        • Unique conjunction pairs
+    - Collapsible panel with animated expand/collapse
+    - NOW marker on timeline
+
+
+12. TIME SIMULATION ENGINE
+--------------------------------------------------------------------------------
+    - Time slider: scrub from NOW to +24 hours (5-minute steps)
+    - Play/Pause button for continuous time advancement
+    - Speed selector: 1x, 2x, 5x, 10x simulation speed
+    - Reset to NOW button
+    - UTC timestamp display with offset indicator
+    - Re-fetches satellite positions and collisions at each time step
+    - Glassmorphic floating control bar at bottom of screen
+
+
+13. SPACE INTELLIGENCE FEED
+--------------------------------------------------------------------------------
+    - Separate page accessible via global navigation
+    - Fetches space-related news and intelligence
+    - Full routing between Dashboard and Intelligence Feed
+
+
+14. PREMIUM UI / UX DESIGN
+--------------------------------------------------------------------------------
+    - Full glassmorphism design system:
+        • Variable glass backgrounds with configurable opacity
+        • Backdrop blur (20px / 40px / 60px levels)
+        • Glass shine overlays (135° gradient)
+        • Frosted glass borders with hover states
+    - Ambient color orbs (animated floating) behind glass panels
+    - Apple-grade easing curves (ease-out-expo, spring)
+    - Premium typography:
+        • Orbitron (display/headings)
+        • Inter (body text)
+        • JetBrains Mono (data/metrics)
+    - Color system:
+        • Deep space background (#050a18)
+        • Cyan accent (#06b6d4)
+        • Blue primary (#3b82f6)
+        • Purple AI (#a855f7)
+        • Semantic: safe (#10b981), warning (#f59e0b), danger (#ef4444)
+    - Animated counters (spring animation for stat numbers)
+    - Framer Motion throughout: stagger, spring, animate presence
+    - Ultra-thin custom scrollbars (4px)
+    - Loading screen: animated orbital loader + "CALIBRATING ORBITAL TELEMETRY..."
+    - Error state with retry button and backend instructions
+    - Full View mode (hides all UI overlays for immersive globe)
+    - Responsive floating panel layout (left/right widget columns)
+    - Global navigation bar with active state indicators
+
+
+15. BACKEND ARCHITECTURE
+--------------------------------------------------------------------------------
+    - Flask REST API with Blueprint-based route organization
+    - CORS configured for frontend origins
+    - Modular service layer:
+        • TLE Service — CelesTrak data fetching with caching
+        • Orbit Service — SGP4 propagation engine
+        • Collision Service — pairwise detection + prediction
+        • Risk Service — scoring and classification
+        • ML Service — AI risk prediction
+        • Maneuver Service — altitude change simulation
+        • Resolver Service — autonomous negotiation logic
+        • Forecast Service — 24-hour predictive analysis
+    - RESTful API endpoints:
+        • GET  /api/health
+        • GET  /api/satellites
+        • POST /api/satellites/fetch
+        • GET  /api/satellites/groups
+        • GET  /api/positions
+        • GET  /api/positions/<id>/trail
+        • GET  /api/positions/timeseries
+        • GET  /api/collisions
+        • GET  /api/collisions/predict
+        • GET  /api/risk
+        • GET  /api/ml-risk
+        • GET  /api/dashboard (aggregated)
+        • GET  /api/forecast
+        • POST /api/maneuver/simulate
+        • POST /api/maneuver/recommend
+        • GET  /api/resolver/auto-resolve
+        • GET  /api/space-feed
+    - TLE data caching to reduce external API calls
+    - Unbuffered Python output for real-time logging
+
+
+16. FRONTEND ARCHITECTURE
+--------------------------------------------------------------------------------
+    - React 19 with Vite 6 build system
+    - React Router v7 for page navigation
+    - Three.js + React Three Fiber (R3F) for 3D rendering
+    - React Three Drei for 3D utilities (OrbitControls, Stars, Html, Line)
+    - React Three Postprocessing for visual effects
+    - Framer Motion for 2D animations
+    - Lucide React for icons
+    - Axios for API communication
+    - Maath for smooth camera easing
+    - Component-based architecture:
+        • Globe/ — 3D scene components (9 files)
+        • Dashboard/ — Stats and layout (2 files)
+        • Alerts/ — Collision alerts and modals (3 files)
+        • Forecast/ — Predictive forecast panel (1 file)
+        • Sidebar/ — Satellite list (1 file)
+        • UI/ — Header and time controls (2 files)
+        • Feed/ — Intelligence feed (1 file)
+
+
+17. UNIFIED LAUNCH SYSTEM
+--------------------------------------------------------------------------------
+    - Single-command startup: python run.py
+    - Launches both Flask backend and Vite frontend simultaneously
+    - Color-coded console output ([BACKEND] blue, [FRONTEND] green)
+    - Graceful shutdown with process tree cleanup (Windows taskkill)
+    - Virtual environment auto-detection
+    - Unicode-safe console output handling
+
+
+================================================================================
+  Total: 17 major feature categories
+  Tech Stack: Python/Flask + React/Three.js + SGP4 + AI/ML
+================================================================================

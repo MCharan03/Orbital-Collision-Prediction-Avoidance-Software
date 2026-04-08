@@ -8,12 +8,19 @@ import time
 def read_stream(stream, prefix, color):
     # Terminal color codes
     reset = "\033[0m"
+    # Reconfigure stdout to handle Unicode gracefully on Windows cp1252 consoles
+    if hasattr(sys.stdout, 'reconfigure'):
+        try:
+            sys.stdout.reconfigure(errors='replace')
+        except Exception:
+            pass
     while True:
         line = stream.readline()
         if not line:
             break
-        # Print with color prefix
-        print(f"{color}[{prefix}]{reset} {line.strip()}", flush=True)
+        # Print with color prefix, replacing unencodable chars
+        safe_line = line.strip().encode(sys.stdout.encoding or 'utf-8', errors='replace').decode(sys.stdout.encoding or 'utf-8', errors='replace')
+        print(f"{color}[{prefix}]{reset} {safe_line}", flush=True)
 
 def main():
     sys.stdout.reconfigure(encoding='utf-8')

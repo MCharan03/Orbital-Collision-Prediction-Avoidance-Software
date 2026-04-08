@@ -58,6 +58,9 @@ export const recommendManeuver = (satNoradId, targetNoradId, group = 'stations')
     group: group
   }).then(r => r.data);
 
+export const fetchAutoResolutions = (group = 'stations') =>
+  api.get(`/resolver/auto-resolve?group=${group}`).then(r => r.data);
+
 // ── Risk ────────────────────────────────────────────────
 export const fetchRisk = (group = 'stations', threshold = 500) =>
   api.get(`/risk?group=${group}&threshold=${threshold}`).then(r => r.data);
@@ -71,6 +74,10 @@ export const fetchDashboard = (group = 'stations', threshold = 500, time = null)
 
 export const fetchMLRisk = (group = 'stations', hours = 24) => 
   api.get(`/ml-risk?group=${group}&hours=${hours}`).then(r => r.data);
+
+// ── Forecast (24h Predictive) ───────────────────────────────
+export const fetchForecast = (group = 'stations', step = 120) =>
+  api.get(`/forecast?group=${group}&step=${step}`, { timeout: 120000 }).then(r => r.data);
 
 // ── Health ──────────────────────────────────────────────
 export const checkHealth = () =>

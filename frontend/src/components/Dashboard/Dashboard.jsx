@@ -6,7 +6,9 @@ import Sidebar from '../Sidebar/Sidebar';
 import StatsPanel from './StatsPanel';
 import AlertsPanel from '../Alerts/AlertsPanel';
 import AlertModal from '../Alerts/AlertModal';
-import { fetchDashboard, fetchTrail } from '../../utils/api';
+import NegotiationFeed from '../Alerts/NegotiationFeed';
+import ForecastPanel from '../Forecast/ForecastPanel';
+import { fetchDashboard, fetchTrail, fetchAutoResolutions, fetchForecast } from '../../utils/api';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -43,6 +45,16 @@ export default function Dashboard() {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [timeLoading, setTimeLoading] = useState(false);
   const [isFullView, setIsFullView] = useState(false);
+  const [resolutions, setResolutions] = useState(null);
+  const [resolvingLoading, setResolvingLoading] = useState(false);
+  const [forecast, setForecast] = useState(null);
+  const [forecastLoading, setForecastLoading] = useState(false);
+
+  // ── Digital Twin Controls ─────────────────
+  const [dtGrid, setDtGrid] = useState(true);
+  const [dtBeams, setDtBeams] = useState(true);
+  const [dtLabels, setDtLabels] = useState(true);
+  const [dtRotate, setDtRotate] = useState(true);
 
   useEffect(() => {
     document.body.classList.toggle('full-view-active', isFullView);
@@ -67,12 +79,28 @@ export default function Dashboard() {
     }
   }, [group]);
 
+  // ── Forecast Fetching ──────────────────────
+  const loadForecast = async () => {
+    setForecastLoading(true);
+    try {
+      const data = await fetchForecast(group, 120);
+      setForecast(data);
+    } catch (err) {
+      console.error('[Forge-X] Failed to load forecast:', err);
+      setForecast(null);
+    } finally {
+      setForecastLoading(false);
+    }
+  };
+
   useEffect(() => {
     setLoading(true);
     setSelectedSat(null);
     setTrail(null);
     setDeviationTrail(null);
+    setForecast(null);
     loadData();
+    loadForecast();
   }, [group, loadData]);
 
   // Auto-refresh every 60 seconds
@@ -107,6 +135,19 @@ export default function Dashboard() {
     if (sat) handleSelectSatellite(sat);
     setModalAlert(collision);
   }, [positions, handleSelectSatellite]);
+
+  const handleAutoResolve = async () => {
+    setResolvingLoading(true);
+    setResolutions(null); // Clear previous feed
+    try {
+      const data = await fetchAutoResolutions(group);
+      setResolutions(data.resolutions || []);
+    } catch (err) {
+      console.error("[Forge-X] Failed to auto resolve", err);
+    } finally {
+      setResolvingLoading(false);
+    }
+  };
 
   // ── Loading Screen ─────────────────────────
   if (loading) {
@@ -150,11 +191,19 @@ export default function Dashboard() {
             onSelectSatellite={handleSelectSatellite}
             trail={trail}
             deviationTrail={deviationTrail}
+            showGrid={dtGrid}
+            showBeams={dtBeams}
+            showLabels={dtLabels}
+            autoRotate={dtRotate}
           />
         </ErrorBoundary>
 
         {/* Globe overlay badges */}
         <div className="globe-overlay" style={{ opacity: isFullView ? 0 : 1, transition: 'opacity 0.4s', pointerEvents: isFullView ? 'none' : 'auto' }}>
+          <div className="overlay-badge dt-badge">
+            <span className="dt-pulse"></span>
+            DIGITAL TWIN
+          </div>
           <div className="overlay-badge">
             🛰 <span className="count">{positions.length}</span> satellites
           </div>
@@ -179,6 +228,51 @@ export default function Dashboard() {
               </span>
             </div>
           )}
+        </div>
+
+        {/* Digital Twin Controls */}
+        <div className="dt-controls" style={{ opacity: isFullView ? 0 : 1, pointerEvents: isFullView ? 'none' : 'auto' }}>
+          <div className="dt-controls-label">DIGITAL TWIN</div>
+          <button
+            className={`dt-btn ${dtGrid ? 'active' : ''}`}
+            onClick={() => setDtGrid(!dtGrid)}
+            title="Toggle Orbital Grid"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            Grid
+          </button>
+          <button
+            className={`dt-btn ${dtBeams ? 'active' : ''}`}
+            onClick={() => setDtBeams(!dtBeams)}
+            title="Toggle Collision Beams"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 4l16 16"/><circle cx="4" cy="4" r="2"/><circle cx="20" cy="20" r="2"/>
+            </svg>
+            Beams
+          </button>
+          <button
+            className={`dt-btn ${dtLabels ? 'active' : ''}`}
+            onClick={() => setDtLabels(!dtLabels)}
+            title="Toggle Satellite Labels"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
+            </svg>
+            Labels
+          </button>
+          <button
+            className={`dt-btn ${dtRotate ? 'active' : ''}`}
+            onClick={() => setDtRotate(!dtRotate)}
+            title="Toggle Auto-Rotate"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
+            </svg>
+            Rotate
+          </button>
         </div>
 
         {/* Floating Full View Toggle Button */}
@@ -227,10 +321,24 @@ export default function Dashboard() {
               satelliteCount={positions.length}
               collisionSummary={collisionSummary}
             />
+            <ForecastPanel
+              forecast={forecast}
+              loading={forecastLoading}
+            />
           </div>
 
           {/* Right Column Widgets */}
           <div className="floating-right-widgets">
+            <button 
+              className="time-btn" 
+              style={{ width: '100%', marginBottom: '16px', background: 'rgba(168, 85, 247, 0.1)', borderColor: '#a855f7', color: '#a855f7', display: 'flex', justifyContent: 'center', gap: '8px', alignItems: 'center' }}
+              onClick={handleAutoResolve}
+              disabled={resolvingLoading}
+            >
+              <span style={resolvingLoading ? { animation: 'pulse 1.5s infinite' } : {}}>⚡</span>
+              {resolvingLoading ? 'INITIALIZING AI RESOLVER...' : 'AUTONOMOUS RESOLUTION START'}
+            </button>
+
             <AlertsPanel
               collisions={collisions}
               onAlertClick={handleAlertClick}
@@ -255,6 +363,10 @@ export default function Dashboard() {
           }} 
           onSimulationComplete={setDeviationTrail}
         />
+      )}
+
+      {resolutions && (
+        <NegotiationFeed resolutions={resolutions} onClose={() => setResolutions(null)} />
       )}
     </div>
   );

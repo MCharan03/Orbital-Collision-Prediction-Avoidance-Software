@@ -98,10 +98,53 @@ def detect_current_collisions(satellites: list[dict],
     events = []
     sat_ids = list(positions.keys())
 
+    # ── Co-location filter ──────────────────────────────────────
+    # ISS/CSS modules share nearly identical orbits (they're physically
+    # attached). Filter out pairs that are part of the same structure.
+    # We group by OBJECT_ID prefix (international designator launch piece)
+    # and additionally by name-based heuristics for known station modules.
+    ISS_MODULE_IDS = set()
+    CSS_MODULE_IDS = set()
+
+    # Build a lookup: norad_id -> OBJECT_ID
+    obj_id_map = {}
+    for sat in satellites:
+        nid = int(sat.get("NORAD_CAT_ID", 0))
+        obj_id_map[nid] = sat.get("OBJECT_ID", "")
+
+    # Known ISS module + docked vehicle names (co-orbiting structure)
+    ISS_KEYWORDS = ["ISS", "ZARYA", "ZVEZDA", "UNITY", "DESTINY", "HARMONY",
+                     "COLUMBUS", "KIBO", "CUPOLA", "TRANQUILITY", "POISK",
+                     "RASSVET", "NAUKA", "PRICHAL",
+                     "PROGRESS", "SOYUZ", "DRAGON", "CYGNUS", "HTV",
+                     "STARLINER", "CREW DRAGON"]
+    CSS_KEYWORDS = ["TIANHE", "WENTIAN", "MENGTIAN", "CSS",
+                    "TIANZHOU", "SHENZHOU"]
+
+    for nid, data in positions.items():
+        name_upper = data["name"].upper()
+        if any(kw in name_upper for kw in ISS_KEYWORDS):
+            ISS_MODULE_IDS.add(nid)
+        elif any(kw in name_upper for kw in CSS_KEYWORDS):
+            CSS_MODULE_IDS.add(nid)
+
+    def are_co_located(id1, id2):
+        """Return True if both satellites are modules of the same station."""
+        if id1 in ISS_MODULE_IDS and id2 in ISS_MODULE_IDS:
+            return True
+        if id1 in CSS_MODULE_IDS and id2 in CSS_MODULE_IDS:
+            return True
+        return False
+
     for i in range(len(sat_ids)):
         for j in range(i + 1, len(sat_ids)):
             id1 = sat_ids[i]
             id2 = sat_ids[j]
+
+            # Skip co-located modules (e.g., ISS components)
+            if are_co_located(id1, id2):
+                continue
+
             s1 = positions[id1]
             s2 = positions[id2]
 
@@ -189,6 +232,31 @@ def predict_closest_approaches(satellites: list[dict],
     sat_ids = list(sat_lookup.keys())
     n = len(sat_ids)
 
+    # ── Co-location filter (same as detect_current_collisions) ──
+    ISS_MODULE_IDS = set()
+    CSS_MODULE_IDS = set()
+    ISS_KEYWORDS = ["ISS", "ZARYA", "ZVEZDA", "UNITY", "DESTINY", "HARMONY",
+                     "COLUMBUS", "KIBO", "CUPOLA", "TRANQUILITY", "POISK",
+                     "RASSVET", "NAUKA", "PRICHAL",
+                     "PROGRESS", "SOYUZ", "DRAGON", "CYGNUS", "HTV",
+                     "STARLINER", "CREW DRAGON"]
+    CSS_KEYWORDS = ["TIANHE", "WENTIAN", "MENGTIAN", "CSS",
+                    "TIANZHOU", "SHENZHOU"]
+
+    for nid, data in sat_lookup.items():
+        name_upper = data["name"].upper()
+        if any(kw in name_upper for kw in ISS_KEYWORDS):
+            ISS_MODULE_IDS.add(nid)
+        elif any(kw in name_upper for kw in CSS_KEYWORDS):
+            CSS_MODULE_IDS.add(nid)
+
+    def are_co_located_pred(id1, id2):
+        if id1 in ISS_MODULE_IDS and id2 in ISS_MODULE_IDS:
+            return True
+        if id1 in CSS_MODULE_IDS and id2 in CSS_MODULE_IDS:
+            return True
+        return False
+
     # Track closest approach for each pair
     # Key: (id1, id2) → {min_dist, tca_time, pos1_at_tca, pos2_at_tca, rel_vel}
     closest = {}
@@ -224,6 +292,11 @@ def predict_closest_approaches(satellites: list[dict],
                     continue
 
                 id1, id2 = sat_ids[i], sat_ids[j]
+
+                # Skip co-located station modules
+                if are_co_located_pred(id1, id2):
+                    continue
+
                 p1 = positions[id1]
                 p2 = positions[id2]
 

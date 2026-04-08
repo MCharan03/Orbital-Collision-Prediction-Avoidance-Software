@@ -10,11 +10,16 @@ import Satellite from './Satellite';
 import CollisionZone from './CollisionZone';
 import OrbitTrail from './OrbitTrail';
 import DensityField from './DensityField';
+import OrbitalGrid from './OrbitalGrid';
+import CollisionBeam from './CollisionBeam';
+import SatelliteLabel from './SatelliteLabel';
 
 /**
- * CameraRig — smooth focus on selected satellites
+ * CameraRig — smooth focus on selected satellites + cinematic auto-rotate idle
  */
-function CameraRig({ selectedSatId, positions }) {
+function CameraRig({ selectedSatId, positions, autoRotate }) {
+  const controlsRef = useRef();
+
   const focusTarget = useMemo(() => {
     if (!selectedSatId) return null;
     const sat = positions?.find(p => p.norad_id === selectedSatId);
@@ -36,6 +41,7 @@ function CameraRig({ selectedSatId, positions }) {
 
   return (
     <OrbitControls
+      ref={controlsRef}
       enablePan={false}
       minDistance={1.5}
       maxDistance={8}
@@ -43,12 +49,71 @@ function CameraRig({ selectedSatId, positions }) {
       dampingFactor={0.05}
       rotateSpeed={0.5}
       zoomSpeed={0.8}
+      autoRotate={autoRotate && !focusTarget}
+      autoRotateSpeed={0.3}
       enabled={!focusTarget}
     />
   );
 }
 
-export default function Scene({ positions, collisions, selectedSatId, onSelectSatellite, trail, deviationTrail }) {
+/**
+ * AmbientParticles — subtle floating dust particles for depth
+ */
+function AmbientParticles() {
+  const ref = useRef();
+  const count = 200;
+
+  const particles = useMemo(() => {
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 12;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 12;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 12;
+    }
+    return positions;
+  }, []);
+
+  useFrame(({ clock }) => {
+    if (ref.current) {
+      ref.current.rotation.y = clock.elapsedTime * 0.005;
+    }
+  });
+
+  return (
+    <points ref={ref}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={count}
+          array={particles}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial
+        size={0.008}
+        color="#6366f1"
+        transparent
+        opacity={0.25}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+        sizeAttenuation
+      />
+    </points>
+  );
+}
+
+export default function Scene({
+  positions,
+  collisions,
+  selectedSatId,
+  onSelectSatellite,
+  trail,
+  deviationTrail,
+  showGrid = true,
+  showBeams = true,
+  showLabels = true,
+  autoRotate = true,
+}) {
   const collisionZones = useMemo(() => {
     if (!collisions) return [];
     return collisions.map(c => {
@@ -95,7 +160,14 @@ export default function Scene({ positions, collisions, selectedSatId, onSelectSa
         {/* Deep Field Stars */}
         <Stars radius={60} depth={60} count={6000} factor={3} saturation={0.3} fade speed={0.15} />
 
+        {/* Ambient space particles */}
+        <AmbientParticles />
+
         <Earth />
+
+        {/* Digital Twin: Orbital Grid */}
+        <OrbitalGrid visible={showGrid} />
+
         <DensityField positions={positions} />
 
         {positions?.map(sat => (
@@ -105,10 +177,21 @@ export default function Scene({ positions, collisions, selectedSatId, onSelectSa
             name={sat.name}
             noradId={sat.norad_id}
             altitude={sat.alt}
+            velocity={sat.vx !== undefined ? { vx: sat.vx, vy: sat.vy, vz: sat.vz } : null}
             riskLevel={sat.risk_level || 'NONE'}
             riskScore={sat.risk_score || 0}
             isSelected={selectedSatId === sat.norad_id}
             onClick={() => onSelectSatellite?.(sat)}
+          />
+        ))}
+
+        {/* Digital Twin: 3D Satellite Labels */}
+        {showLabels && positions?.map(sat => (
+          <SatelliteLabel
+            key={`label-${sat.norad_id}`}
+            satellite={sat}
+            isSelected={selectedSatId === sat.norad_id}
+            visible={showLabels}
           />
         ))}
 
@@ -136,6 +219,15 @@ export default function Scene({ positions, collisions, selectedSatId, onSelectSa
           />
         ))}
 
+        {/* Digital Twin: Collision Beams */}
+        {showBeams && collisions?.map((collision, i) => (
+          <CollisionBeam
+            key={`beam-${i}`}
+            collision={collision}
+            visible={showBeams}
+          />
+        ))}
+
         {/* Post Processing */}
         <EffectComposer disableNormalPass multisampling={0}>
           <Bloom 
@@ -147,7 +239,12 @@ export default function Scene({ positions, collisions, selectedSatId, onSelectSa
           <Vignette eskil={false} offset={0.1} darkness={0.5} />
         </EffectComposer>
 
-        <CameraRig selectedSatId={selectedSatId} positions={positions} collisions={collisions} />
+        <CameraRig
+          selectedSatId={selectedSatId}
+          positions={positions}
+          collisions={collisions}
+          autoRotate={autoRotate}
+        />
 
       </Suspense>
     </Canvas>

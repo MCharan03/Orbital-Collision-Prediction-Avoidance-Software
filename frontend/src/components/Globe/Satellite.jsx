@@ -40,7 +40,7 @@ function getSatelliteTexture(color) {
   return textureCache[color];
 }
 
-export default function Satellite({ position, name, noradId, altitude, riskLevel = 'NONE', riskScore = 0, onClick, isSelected }) {
+export default function Satellite({ position, name, noradId, altitude, velocity, riskLevel = 'NONE', riskScore = 0, onClick, isSelected }) {
   const spriteRef = useRef();
   const glowRef = useRef();
   const ringRef = useRef();
@@ -70,6 +70,17 @@ export default function Satellite({ position, name, noradId, altitude, riskLevel
       toneMapped: false,
     });
   }, [spriteTexture]);
+
+  // Compute velocity arrow for Digital Twin
+  const velocityArrow = useMemo(() => {
+    if (!velocity || !velocity.vx) return null;
+    const { vx, vy, vz } = velocity;
+    const mag = Math.sqrt(vx * vx + vy * vy + vz * vz);
+    if (mag < 0.01) return null;
+    // Normalized direction, scaled for visibility
+    const scale = 0.06;
+    return new THREE.Vector3(vx / mag * scale, vy / mag * scale, vz / mag * scale);
+  }, [velocity]);
 
   useFrame((state) => {
     if (!spriteRef.current) return;
@@ -139,8 +150,28 @@ export default function Satellite({ position, name, noradId, altitude, riskLevel
                 <span className="value">{riskScore}/100</span>
               </div>
             )}
+            {velocity && (
+              <div className="sat-tooltip-row">
+                <span className="label">Velocity</span>
+                <span className="value">{Math.sqrt(velocity.vx**2 + velocity.vy**2 + velocity.vz**2).toFixed(2)} km/s</span>
+              </div>
+            )}
           </div>
         </Html>
+      )}
+
+      {/* Velocity direction arrow (visible on hover/selected) */}
+      {velocityArrow && (hovered || isSelected) && (
+        <arrowHelper
+          args={[
+            velocityArrow.clone().normalize(),
+            new THREE.Vector3(0, 0, 0),
+            0.06,
+            new THREE.Color(baseColor).getHex(),
+            0.015,
+            0.008,
+          ]}
+        />
       )}
 
       {/* Glow sphere for high/medium risk */}
