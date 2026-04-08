@@ -43,6 +43,14 @@ export const fetchCollisions = (group = 'stations', threshold = 500, time = null
 export const predictCollisions = (group = 'stations', hours = 6, step = 120) =>
   api.get(`/collisions/predict?group=${group}&hours=${hours}&step=${step}`).then(r => r.data);
 
+export const simulateManeuver = (satNoradId, targetNoradId, deltaHKm, group = 'stations') =>
+  api.post('/maneuver/simulate', {
+    sat_norad_id: satNoradId,
+    target_norad_id: targetNoradId,
+    delta_h_km: deltaHKm,
+    group: group
+  }).then(r => r.data);
+
 // ── Risk ────────────────────────────────────────────────
 export const fetchRisk = (group = 'stations', threshold = 500) =>
   api.get(`/risk?group=${group}&threshold=${threshold}`).then(r => r.data);

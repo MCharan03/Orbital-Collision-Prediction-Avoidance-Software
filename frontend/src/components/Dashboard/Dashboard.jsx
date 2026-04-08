@@ -244,7 +244,7 @@ export default function Dashboard() {
       </div>
 
       {modalAlert && (
-        <AlertModal collision={modalAlert} onClose={() => setModalAlert(null)} />
+        <AlertModal collision={modalAlert} group={group} onClose={() => setModalAlert(null)} />
       )}
     </div>
   );

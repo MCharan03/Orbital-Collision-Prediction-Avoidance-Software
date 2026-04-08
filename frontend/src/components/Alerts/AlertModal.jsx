@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
+import { simulateManeuver } from '../../utils/api';
 
-export default function AlertModal({ collision, onClose }) {
+export default function AlertModal({ collision, group = 'stations', onClose }) {
+  const [simDeltaH, setSimDeltaH] = useState(5.0);
+  const [simLoading, setSimLoading] = useState(false);
+  const [simResult, setSimResult] = useState(null);
+
   if (!collision) return null;
 
   const {
@@ -23,6 +28,25 @@ export default function AlertModal({ collision, onClose }) {
       return d.toLocaleString();
     } catch {
       return isoString;
+    }
+  };
+
+  const handleSimulate = async () => {
+    setSimLoading(true);
+    setSimResult(null);
+    try {
+      const data = await simulateManeuver(
+        collision.sat1_norad_id,
+        collision.sat2_norad_id,
+        simDeltaH,
+        group
+      );
+      setSimResult(data);
+    } catch (err) {
+      console.error("Simulation error", err);
+      setSimResult({ error: "Failed to run simulation." });
+    } finally {
+      setSimLoading(false);
     }
   };
 
@@ -112,6 +136,58 @@ export default function AlertModal({ collision, onClose }) {
                 <div className="modal-metric-label">TCA</div>
                 <div className="modal-metric-value small">{formatTCA(time_of_closest_approach)}</div>
              </div>
+          </div>
+
+          {/* Maneuver Simulation */}
+          <div className="modal-explainability" style={{ marginTop: '24px' }}>
+            <div className="modal-section-label" style={{ color: '#22d3ee' }}>
+              Simulate Avoidance Maneuver
+            </div>
+            
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '12px' }}>
+              <input 
+                type="range" 
+                min="-20" 
+                max="20" 
+                step="1" 
+                value={simDeltaH} 
+                onChange={e => setSimDeltaH(Number(e.target.value))}
+                style={{ flex: 1, accentColor: '#22d3ee' }}
+              />
+              <span style={{ fontFamily: 'var(--font-mono)', minWidth: '60px', color: '#e2e8f0' }}>
+                {simDeltaH > 0 ? '+' : ''}{simDeltaH} km
+              </span>
+              <button 
+                className="time-btn" 
+                style={{ background: 'rgba(34, 211, 238, 0.1)', borderColor: '#22d3ee', color: '#22d3ee', whiteSpace: 'nowrap' }}
+                onClick={handleSimulate}
+                disabled={simLoading}
+              >
+                {simLoading ? 'Simulating...' : 'Run Simulation'}
+              </button>
+            </div>
+
+            {simResult && !simResult.error && (
+              <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid #22c55e', borderRadius: '4px' }}>
+                <div style={{ fontSize: '14px', marginBottom: '8px', color: '#22c55e', fontWeight: 'bold' }}>Simulation Successful</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-mono)', fontSize: '13px', color: '#e2e8f0' }}>
+                  <span>Original Risk: <strong>{collision.risk_score}</strong> ({collision.risk_level})</span>
+                  <span>➜</span>
+                  <span>New Risk: <strong>{simResult.new_risk_score}</strong> ({simResult.new_risk_level})</span>
+                </div>
+                {simResult.new_distance_km !== null && (
+                  <div style={{ marginTop: '6px', fontSize: '12px', color: 'rgba(226, 232, 240, 0.7)' }}>
+                    New Min Distance: {simResult.new_distance_km < 1 ? (simResult.new_distance_km*1000).toFixed(0) + ' m' : simResult.new_distance_km.toFixed(2) + ' km'}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {simResult?.error && (
+              <div style={{ marginTop: '12px', color: '#ef4444', fontSize: '13px' }}>
+                {simResult.error}
+              </div>
+            )}
           </div>
 
         </div>
