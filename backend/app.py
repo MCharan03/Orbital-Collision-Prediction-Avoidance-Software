@@ -21,6 +21,7 @@ from routes.feed_routes import feed_bp
 from routes.traffic_manager_routes import traffic_manager_bp
 from routes.maneuver_routes import maneuver_bp
 from routes.cascade_routes import cascade_bp
+from routes.decision_routes import decision_bp
 
 def create_app():
     """Create and configure the Flask application."""
@@ -40,6 +41,7 @@ def create_app():
     app.register_blueprint(traffic_manager_bp)
     app.register_blueprint(maneuver_bp)
     app.register_blueprint(cascade_bp)
+    app.register_blueprint(decision_bp)
 
     # Health check
     @app.route("/api/health", methods=["GET"])

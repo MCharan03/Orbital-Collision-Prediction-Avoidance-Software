@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import ConflictGraph from './ConflictGraph';
 
 export default function AlertModal({ collision, onClose, onSimulateManeuver }) {
-  const [maneuvers, setManeuvers] = useState(null);
+  const [engineData, setEngineData] = useState(null);
   const [loadingManeuvers, setLoadingManeuvers] = useState(false);
 
   useEffect(() => {
@@ -14,14 +15,12 @@ export default function AlertModal({ collision, onClose, onSimulateManeuver }) {
     const fetchManeuvers = async () => {
       try {
         setLoadingManeuvers(true);
-        const res = await axios.post('http://localhost:5000/api/maneuvers/recommend', {
-          sat1_id: collision.sat1_norad_id,
-          sat2_id: collision.sat2_norad_id,
-          tca: collision.time_of_closest_approach,
-          original_min_distance: collision.min_distance_km
+        const res = await axios.post('http://localhost:5000/api/decision-engine', {
+          collision: collision,
+          group: 'stations'
         });
-        if (isMounted && res.data.status === 'success') {
-          setManeuvers(res.data.recommendations);
+        if (isMounted && res.data && !res.data.error) {
+          setEngineData(res.data);
         }
       } catch (e) {
         console.error("Maneuver fetch error", e);
@@ -154,11 +153,25 @@ export default function AlertModal({ collision, onClose, onSimulateManeuver }) {
             {loadingManeuvers ? (
                <div style={{ color: 'var(--color-ai)', fontSize: 11, fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0' }}>
                  <div className="loader-orbit" style={{ width: 16, height: 16, border: '2px solid rgba(168,85,247,0.3)', borderTopColor: '#a855f7' }}></div> 
-                 Computing Optimal Burn Windows...
+                 Computing N-Body Global Resolution...
                </div>
-            ) : maneuvers && maneuvers.length > 0 ? (
+            ) : engineData && engineData.best_maneuvers?.length > 0 ? (
                <div className="maneuver-list">
-                 {maneuvers.map((m, idx) => (
+                 
+                 {/* AI Insights Panel */}
+                 <div style={{ background: 'rgba(168,85,247,0.05)', border: '1px solid rgba(168,85,247,0.2)', padding: 12, borderRadius: 8, marginBottom: 16 }}>
+                    <div style={{ fontSize: 11, color: '#a855f7', fontWeight: 600, marginBottom: 4 }}>🧠 GEMINI ANALYSIS</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-primary)', marginBottom: 8, lineHeight: 1.4 }}>{engineData.operator_explanation}</div>
+                    
+                    {engineData.cascade_prediction?.cascade_risk_score > 50 && (
+                        <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', padding: 6, borderRadius: 4, marginTop: 8 }}>
+                           <span style={{ color: '#ef4444', fontWeight: 'bold', fontSize: 10 }}>⚠ KESSLER SYNDROME RISK:</span>
+                           <span style={{ color: 'var(--text-secondary)', fontSize: 10, marginLeft: 6 }}>{engineData.cascade_prediction.debris_count} fragments predicted. Score: {engineData.cascade_prediction.cascade_risk_score}</span>
+                        </div>
+                    )}
+                 </div>
+
+                 {engineData.best_maneuvers.map((m, idx) => (
                    <div key={idx} className={`maneuver-card ${idx === 0 ? 'best' : ''}`}>
                      {idx === 0 && <div className="maneuver-badge">OPTIMAL</div>}
                      <div className="maneuver-header">
@@ -193,13 +206,18 @@ export default function AlertModal({ collision, onClose, onSimulateManeuver }) {
                         </div>
                      </div>
 
-                     <div className="maneuver-reason">
-                       {m.recommendation}
+                     {/* Intelligence text inside the card */}
+                     <div style={{ padding: 12, borderLeft: '2px solid #a855f7', background: 'rgba(168,85,247,0.05)', fontSize: 11, color: 'var(--text-secondary)', marginTop: 12, lineHeight: 1.4, borderRadius: '0 4px 4px 0' }}>
+                       {m.burn_direction.includes('prograde') ? 'Speeding up' : m.burn_direction.includes('retrograde') ? 'Slowing down' : 'Adjusting altitude'} by {m.delta_v_m_s} m/s alters our arrival time, allowing us to safely miss the threat by a comfortable {(collision.min_distance_km + m.risk_reduction / 10).toFixed(2)} km.
                      </div>
-
+                     
                      <button className="time-btn" style={{ width: '100%', marginTop: 12, padding: '8px 0', fontSize: 10, background: idx===0 ? 'rgba(6,182,212,0.1)' : 'transparent' }} onClick={() => {
                         if (onSimulateManeuver) {
                            onSimulateManeuver(m, collision);
+                           // Inject debris field trigger here if high cascade risk
+                           if (engineData.cascade_prediction?.cascade_risk_score > 50) {
+                              window.dispatchEvent(new CustomEvent('triggerDebris', { detail: collision }));
+                           }
                            onClose();
                         }
                      }}>
@@ -207,6 +225,26 @@ export default function AlertModal({ collision, onClose, onSimulateManeuver }) {
                      </button>
                    </div>
                  ))}
+                 
+                 {/* Show a rejected maneuver for explainability */}
+                 {engineData.rejected_maneuvers?.length > 0 && (
+                    <div className="maneuver-card" style={{ opacity: 0.5, borderStyle: 'dashed' }}>
+                       <div className="maneuver-badge" style={{ background: '#ef4444', color: '#fff' }}>REJECTED</div>
+                       <div className="maneuver-header" style={{ marginTop: 10 }}>
+                         <span style={{ fontSize: 11, color: '#ef4444' }}>INVALIDATED BY N-BODY CHECK</span>
+                       </div>
+                       <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>
+                          {engineData.rejected_maneuvers[0].reason}
+                       </div>
+                    </div>
+                 )}
+                 
+                 {engineData.rejected_maneuvers?.length > 0 && (
+                    <ConflictGraph 
+                        primaryCollision={collision} 
+                        rejectedManeuvers={engineData.rejected_maneuvers} 
+                    />
+                 )}
                </div>
             ) : (
                <div style={{ color: 'var(--text-muted)', fontSize: 11, fontFamily: 'var(--font-mono)' }}>No optimized maneuvers found within limits.</div>

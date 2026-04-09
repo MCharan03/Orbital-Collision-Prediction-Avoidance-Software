@@ -14,14 +14,17 @@ class ErrorBoundary extends Component {
     super(props);
     this.state = { hasError: false };
   }
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error: error };
   }
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#ef4444', fontFamily: 'var(--font-mono)' }}>
-          [WebGL Render Error] Reload the page or try a simpler scene.
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#ef4444', fontFamily: 'var(--font-mono)' }}>
+          <div>[WebGL Render Error] Reload the page or try a simpler scene.</div>
+          <div style={{ marginTop: 20, whiteSpace: 'pre-wrap', fontSize: 11, background: '#111', padding: 20, color: '#ffaaaa' }}>
+            {this.state.error && this.state.error.stack ? this.state.error.stack : this.state.error?.toString()}
+          </div>
         </div>
       );
     }

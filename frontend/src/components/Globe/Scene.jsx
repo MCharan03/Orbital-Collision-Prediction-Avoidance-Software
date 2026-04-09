@@ -1,4 +1,4 @@
-import { Suspense, useMemo, useRef } from 'react';
+import { Suspense, useMemo, useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
@@ -10,6 +10,7 @@ import Satellite from './Satellite';
 import CollisionZone from './CollisionZone';
 import OrbitTrail from './OrbitTrail';
 import DensityField from './DensityField';
+import DebrisField from './DebrisField';
 
 /**
  * CameraRig — smooth focus on selected satellites
@@ -18,7 +19,9 @@ function CameraRig({ selectedSatId, positions }) {
   const focusTarget = useMemo(() => {
     if (!selectedSatId) return null;
     const sat = positions?.find(p => p.norad_id === selectedSatId);
-    if (sat) return new THREE.Vector3(sat.x, sat.y, sat.z);
+    if (sat && !isNaN(sat.x) && !isNaN(sat.y) && !isNaN(sat.z)) {
+        return new THREE.Vector3(sat.x, sat.y, sat.z);
+    }
     return null;
   }, [selectedSatId, positions]);
 
@@ -49,15 +52,46 @@ function CameraRig({ selectedSatId, positions }) {
 }
 
 export default function Scene({ positions, collisions, selectedSatId, onSelectSatellite, trail, aiHighlightedIds = [], simulatedManeuver }) {
+  const [debrisPos, setDebrisPos] = useState(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+       const c = e.detail;
+       if (c.sat1_position && c.sat2_position) {
+           const x1 = isNaN(c.sat1_position.x) ? 0 : c.sat1_position.x;
+           const y1 = isNaN(c.sat1_position.y) ? 0 : c.sat1_position.y;
+           const z1 = isNaN(c.sat1_position.z) ? 0 : c.sat1_position.z;
+           const x2 = isNaN(c.sat2_position.x) ? 0 : c.sat2_position.x;
+           const y2 = isNaN(c.sat2_position.y) ? 0 : c.sat2_position.y;
+           const z2 = isNaN(c.sat2_position.z) ? 0 : c.sat2_position.z;
+
+           setDebrisPos([
+              (x1 + x2) / 2,
+              (y1 + y2) / 2,
+              (z1 + z2) / 2,
+           ]);
+       }
+    };
+    window.addEventListener('triggerDebris', handler);
+    return () => window.removeEventListener('triggerDebris', handler);
+  }, []);
+
   const collisionZones = useMemo(() => {
     if (!collisions) return [];
     return collisions.map(c => {
       if (!c.sat1_position || !c.sat2_position) return null;
+      const x1 = isNaN(c.sat1_position.x) ? 0 : c.sat1_position.x;
+      const y1 = isNaN(c.sat1_position.y) ? 0 : c.sat1_position.y;
+      const z1 = isNaN(c.sat1_position.z) ? 0 : c.sat1_position.z;
+      const x2 = isNaN(c.sat2_position.x) ? 0 : c.sat2_position.x;
+      const y2 = isNaN(c.sat2_position.y) ? 0 : c.sat2_position.y;
+      const z2 = isNaN(c.sat2_position.z) ? 0 : c.sat2_position.z;
+
       return {
         position: [
-          (c.sat1_position.x + c.sat2_position.x) / 2,
-          (c.sat1_position.y + c.sat2_position.y) / 2,
-          (c.sat1_position.z + c.sat2_position.z) / 2,
+          (x1 + x2) / 2,
+          (y1 + y2) / 2,
+          (z1 + z2) / 2,
         ],
         riskLevel: c.risk_level,
         riskScore: c.risk_score,
@@ -97,6 +131,7 @@ export default function Scene({ positions, collisions, selectedSatId, onSelectSa
 
         <Earth />
         <DensityField positions={positions} />
+        {debrisPos && <DebrisField position={debrisPos} count={150} />}
 
         {positions?.map(sat => (
           <Satellite

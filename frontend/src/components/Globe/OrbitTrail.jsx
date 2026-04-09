@@ -10,7 +10,11 @@ export default function OrbitTrail({ points, riskLevel = 'NONE', colorOverride, 
 
   const linePoints = useMemo(() => {
     if (!points || points.length < 2) return null;
-    return points.map(p => [p.x, p.y, p.z]);
+    const vPoints = points
+        .filter(p => p.x != null && p.y != null && p.z != null && !isNaN(p.x) && !isNaN(p.y) && !isNaN(p.z))
+        .map(p => [p.x, p.y, p.z]);
+    if (vPoints.length < 2) return null;
+    return vPoints;
   }, [points]);
 
   if (!linePoints) return null;
