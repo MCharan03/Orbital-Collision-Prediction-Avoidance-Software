@@ -1,7 +1,7 @@
 import { Suspense, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
-import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
+// Post-processing removed — causes WebGL context loss on integrated GPUs
 import * as THREE from 'three';
 import { easing } from 'maath';
 
@@ -134,7 +134,17 @@ export default function Scene({
   return (
     <Canvas
       camera={{ position: [0, 0.5, 3.2], fov: 45, near: 0.01, far: 100 }}
-      gl={{ antialias: true, alpha: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: false }}
+      gl={{ antialias: false, alpha: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0, powerPreference: 'high-performance' }}
+      dpr={[1, 1.5]}
+      onCreated={({ gl }) => {
+        gl.domElement.addEventListener('webglcontextlost', (e) => {
+          e.preventDefault();
+          console.warn('[FORGE-X] WebGL context lost — will auto-restore');
+        });
+        gl.domElement.addEventListener('webglcontextrestored', () => {
+          console.log('[FORGE-X] WebGL context restored');
+        });
+      }}
     >
       {/* Deep space background — matches UI bg */}
       <color attach="background" args={['#050a18']} />
@@ -160,8 +170,6 @@ export default function Scene({
         {/* Deep Field Stars */}
         <Stars radius={60} depth={60} count={3000} factor={3} saturation={0.3} fade speed={0.15} />
 
-        {/* Ambient space particles */}
-        <AmbientParticles />
 
         <Earth />
 
@@ -228,16 +236,7 @@ export default function Scene({
           />
         ))}
 
-        {/* Post Processing */}
-        <EffectComposer disableNormalPass multisampling={0}>
-          <Bloom 
-            luminanceThreshold={2.5} 
-            mipmapBlur 
-            intensity={0.3} 
-            radius={0.3}
-          />
-          <Vignette eskil={false} offset={0.1} darkness={0.5} />
-        </EffectComposer>
+
 
         <CameraRig
           selectedSatId={selectedSatId}
