@@ -82,8 +82,8 @@ export default function Footer() {
 
           <div className="flex items-center gap-3">
             <div className="relative flex items-center justify-center">
-              <div className="w-2 h-2 rounded-full bg-color-safe" />
-              <div className="absolute w-2 h-2 rounded-full bg-color-safe animate-ping" />
+              <div className="w-2 h-2 rounded-full bg-[#22c55e]" />
+              <div className="absolute w-2 h-2 rounded-full bg-[#22c55e] animate-ping" />
             </div>
             <span>Available for projects</span>
           </div>

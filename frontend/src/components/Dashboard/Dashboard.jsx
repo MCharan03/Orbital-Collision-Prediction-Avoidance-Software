@@ -313,37 +313,38 @@ export default function Dashboard() {
           />
         </ErrorBoundary>
 
-        {/* Digital Twin Controls */}
-        <div className="dt-controls" style={{ opacity: isFullView ? 0 : 1, pointerEvents: isFullView ? 'none' : 'auto' }}>
-          <div className="dt-controls-label">DIGITAL TWIN</div>
-          <button className={`dt-btn ${dtGrid ? 'active' : ''}`} onClick={() => setDtGrid(!dtGrid)} title="Toggle Orbital Grid">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            </svg>
-            Grid
-          </button>
-          <button className={`dt-btn ${dtBeams ? 'active' : ''}`} onClick={() => setDtBeams(!dtBeams)} title="Toggle Collision Beams">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 4l16 16"/><circle cx="4" cy="4" r="2"/><circle cx="20" cy="20" r="2"/>
-            </svg>
-            Beams
-          </button>
-          <button className={`dt-btn ${dtLabels ? 'active' : ''}`} onClick={() => setDtLabels(!dtLabels)} title="Toggle Satellite Labels">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
-            </svg>
-            Labels
-          </button>
-          <button className={`dt-btn ${dtRotate ? 'active' : ''}`} onClick={() => setDtRotate(!dtRotate)} title="Toggle Auto-Rotate">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
-            </svg>
-            Rotate
-          </button>
+        {/* Unified Bottom Dock */}
+        <div className="unified-bottom-dock" style={{ opacity: isFullView ? 0 : 1 }}>
+          <div className="dt-controls-compact">
+            <button className={`dt-btn-mini ${dtGrid ? 'active' : ''}`} onClick={() => setDtGrid(!dtGrid)} title="Grid">
+              🌐
+            </button>
+            <button className={`dt-btn-mini ${dtBeams ? 'active' : ''}`} onClick={() => setDtBeams(!dtBeams)} title="Beams">
+              ⚡
+            </button>
+            <button className={`dt-btn-mini ${dtLabels ? 'active' : ''}`} onClick={() => setDtLabels(!dtLabels)} title="Labels">
+              🏷️
+            </button>
+            <button className={`dt-btn-mini ${dtRotate ? 'active' : ''}`} onClick={() => setDtRotate(!dtRotate)} title="Rotate">
+              🔄
+            </button>
+          </div>
+          
+          <div className="bottom-divider" />
+
+          <div className="time-slider-dock-wrap">
+            <TimeSlider onTimeChange={handleTimeChange} isLoading={timeLoading} compact={true} />
+          </div>
         </div>
 
-        {/* Time simulation slider */}
-        <TimeSlider onTimeChange={handleTimeChange} isLoading={timeLoading} />
+        {/* Full View Toggle */}
+        <button 
+          className={`full-view-toggle ${isFullView ? 'active' : ''}`}
+          onClick={() => setIsFullView(!isFullView)}
+          title={isFullView ? "Exit Full View" : "Enter Full View"}
+        >
+          {isFullView ? "✕ Exit" : "⛶ Full View"}
+        </button>
       </div>
 
       {/* Floating UI Overlays */}
@@ -355,12 +356,12 @@ export default function Dashboard() {
           lastUpdate={lastUpdate}
         />
 
-        {/* Tab Navigation */}
-        <div className="dashboard-tabs">
+        {/* Centered Tab Navigation */}
+        <div className="dashboard-tabs-centered" style={{ opacity: isFullView ? 0 : 1 }}>
           {tabs.map(tab => (
             <button
               key={tab.id}
-              className={`dashboard-tab ${activeTab === tab.id ? 'active' : ''}`}
+              className={`dashboard-tab-pill ${activeTab === tab.id ? 'active' : ''}`}
               onClick={() => setActiveTab(tab.id)}
             >
               <span className="tab-icon">{tab.icon}</span>
@@ -369,7 +370,7 @@ export default function Dashboard() {
           ))}
         </div>
 
-        <div className="floating-ui-layer">
+        <div className="floating-ui-layer" style={{ opacity: isFullView ? 0 : 1, pointerEvents: isFullView ? 'none' : 'auto' }}>
           {/* Left Column — Content changes based on active tab */}
           <div className="floating-left-widgets">
             {renderLeftPanel()}
@@ -418,7 +419,7 @@ export default function Dashboard() {
       )}
 
       {/* Traffic Manager AI — only shown as floating when NOT on AI tab */}
-      {activeTab !== 'ai' && (
+      {activeTab !== 'ai' && !isFullView && (
         <TrafficManagerAI
           satelliteContext={positions}
           onHighlightSatellites={(ids) => {

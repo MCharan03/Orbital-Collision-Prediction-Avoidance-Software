@@ -12,7 +12,7 @@ export default function LandingPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <div className="relative bg-bg min-h-screen selection:bg-accent selection:text-bg">
+    <div className="landing-page-root relative bg-bg min-h-screen selection:bg-accent selection:text-bg">
       {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
       
       {!isLoading && (
