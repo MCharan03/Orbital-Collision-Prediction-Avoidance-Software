@@ -28,14 +28,13 @@ function CameraRig({ selectedSatId, positions, autoRotate }) {
   }, [selectedSatId, positions]);
 
   useFrame((state, delta) => {
-    if (focusTarget) {
-      easing.damp3(
-        state.camera.position,
-        [focusTarget.x * 2, focusTarget.y * 2 + 0.5, focusTarget.z * 2],
-        0.4,
-        delta
-      );
-      state.camera.lookAt(0, 0, 0);
+    if (focusTarget && controlsRef.current) {
+      // Instead of forcing camera position every frame, we softly pan the OrbitControls target to the satellite
+      // This allows the user to still zoom in/out while looking at the satellite!
+      easing.damp3(controlsRef.current.target, [focusTarget.x, focusTarget.y, focusTarget.z], 0.25, delta);
+    } else if (controlsRef.current) {
+      // Return to origin if nothing selected
+      easing.damp3(controlsRef.current.target, [0, 0, 0], 0.25, delta);
     }
   });
 
@@ -51,7 +50,6 @@ function CameraRig({ selectedSatId, positions, autoRotate }) {
       zoomSpeed={0.8}
       autoRotate={autoRotate && !focusTarget}
       autoRotateSpeed={0.3}
-      enabled={!focusTarget}
     />
   );
 }
@@ -136,13 +134,14 @@ export default function Scene({
       camera={{ position: [0, 0.5, 3.2], fov: 45, near: 0.01, far: 100 }}
       gl={{ antialias: false, alpha: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0, powerPreference: 'high-performance' }}
       dpr={[1, 1.5]}
+      onPointerMissed={() => onSelectSatellite && onSelectSatellite(null)}
       onCreated={({ gl }) => {
         gl.domElement.addEventListener('webglcontextlost', (e) => {
           e.preventDefault();
-          console.warn('[FORGE-X] WebGL context lost — will auto-restore');
+          console.warn('[ORBIX] WebGL context lost — will auto-restore');
         });
         gl.domElement.addEventListener('webglcontextrestored', () => {
-          console.log('[FORGE-X] WebGL context restored');
+          console.log('[ORBIX] WebGL context restored');
         });
       }}
     >

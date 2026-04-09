@@ -9,7 +9,7 @@ export default function Header({ group, onGroupChange, satelliteCount, lastUpdat
       <div className="header-brand">
         <div className="header-logo">FX</div>
         <div className="header-text">
-          <div className="header-title">Forge-X</div>
+          <div className="header-title">ORBIX</div>
           <div className="header-subtitle">Space Traffic Management</div>
         </div>
       </div>

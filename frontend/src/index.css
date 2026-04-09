@@ -1,3 +1,89 @@
+@tailwind base;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
+@tailwind components;
+@tailwind utilities;
+
+/* -- Global Design System ------------------------------- */
+:root {
+  --bg: 0 0% 4%;
+  --surface: 0 0% 8%;
+  --text: 0 0% 96%;
+  --muted: 0 0% 53%;
+  --stroke: 0 0% 12%;
+  --accent: 0 0% 96%;
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-text-primary font-body antialiased;
+  }
+}
+
+.accent-gradient {
+  background: linear-gradient(90deg, #89AACC 0%, #4E85BF 100%);
+}
+
+.accent-gradient-text {
+  background: linear-gradient(90deg, #89AACC 0%, #4E85BF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--stroke));
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #89AACC;
+}
+
+/* ----------------------------------------------------------
+   ORBIX � Premium Global Styles
+   ---------------------------------------------------------- */
+
+.glass-panel {
+  @apply backdrop-blur-md bg-surface/40 border border-stroke shadow-md;
+}
+
+.blur-in {
+  opacity: 0;
+  filter: blur(10px);
+  transform: translateY(20px);
+}
+
+.name-reveal {
+  opacity: 0;
+  transform: translateY(50px);
+}
+
+/* Halftone Overlay */
+.halftone {
+  background-image: radial-gradient(circle, #000 1px, transparent 1px);
+  background-size: 4px 4px;
+}
+
+@keyframes role-fade-in {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-role-fade-in {
+  animation: role-fade-in 0.4s ease-out forwards;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
+
 /* ═══════════════════════════════════════════════════════════
    FORGE-X — Premium Aerospace Design System v2.0
    Ultra-Glass · Deep Transparency · Apple-Grade Polish

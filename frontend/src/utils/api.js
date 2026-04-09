@@ -1,5 +1,5 @@
 /**
- * Forge-X API Client
+ * Orbix API Client
  * Centralized API communication with the Flask backend.
  */
 import axios from 'axios';

@@ -92,7 +92,7 @@ export default function Dashboard() {
       setCollisionSummary(data.collision_summary || null);
       setLastUpdate(data.time);
     } catch (err) {
-      console.error('[Forge-X] Failed to load dashboard:', err);
+      console.error('[Orbix] Failed to load dashboard:', err);
       setError(err.message || 'Failed to connect to backend');
     } finally {
       setLoading(false);
@@ -127,7 +127,7 @@ export default function Dashboard() {
       const data = await fetchForecast(group, 120);
       setForecast(data);
     } catch (err) {
-      console.error('[Forge-X] Failed to load forecast:', err);
+      console.error('[Orbix] Failed to load forecast:', err);
       setForecast(null);
     } finally {
       setForecastLoading(false);
@@ -161,7 +161,7 @@ export default function Dashboard() {
       const data = await fetchTrail(sat.norad_id, group, 90);
       setTrail(data.trail || []);
     } catch (err) {
-      console.error('[Forge-X] Failed to fetch trail:', err);
+      console.error('[Orbix] Failed to fetch trail:', err);
       setTrail(null);
     }
   }, [group]);
@@ -192,7 +192,7 @@ export default function Dashboard() {
       const data = await fetchAutoResolutions(group);
       setResolutions(data.resolutions || []);
     } catch (err) {
-      console.error("[Forge-X] Failed to auto resolve", err);
+      console.error("[Orbix] Failed to auto resolve", err);
     } finally {
       setResolvingLoading(false);
     }

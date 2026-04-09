@@ -83,7 +83,7 @@ if __name__ == "__main__":
     app = create_app()
     print(f"""
 ╔══════════════════════════════════════════════════════╗
-║           FORGE-X  Space Traffic Management          ║
+║                ORBIX  Space Traffic Management          ║
 ║        AI-Based Satellite Collision Prediction        ║
 ╠══════════════════════════════════════════════════════╣
 ║  Server:  http://{FLASK_HOST}:{FLASK_PORT}                       ║
