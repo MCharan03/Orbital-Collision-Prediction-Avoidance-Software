@@ -44,3 +44,25 @@ export const TIME_SLIDER = {
   STEP_MINUTES: 5,
   DEFAULT_SPEED: 1, // 1x realtime
 };
+
+// ASWAN — Space Weather Colors
+export const WEATHER_COLORS = {
+  METEOR_SHOWER: '#ff6b35',
+  SOLAR_STORM: '#ff2d55',
+  NOMINAL: '#22c55e',
+  ELEVATED: '#f59e0b',
+  CRITICAL: '#ef4444',
+};
+
+export const NETWORK_STATUS_COLORS = {
+  NOMINAL: '#22c55e',
+  ELEVATED: '#f59e0b',
+  DEGRADED: '#ef4444',
+  CRITICAL: '#dc2626',
+};
+
+export const RECOMMENDATION_COLORS = {
+  HIGH: '#ef4444',
+  MEDIUM: '#f59e0b',
+  LOW: '#22c55e',
+};
