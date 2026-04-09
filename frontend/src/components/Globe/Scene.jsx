@@ -9,7 +9,7 @@ import Earth from './Earth';
 import Satellite from './Satellite';
 import CollisionZone from './CollisionZone';
 import OrbitTrail from './OrbitTrail';
-import DensityField from './DensityField';
+// DensityField removed — causes WebGL crashes on integrated GPUs
 import OrbitalGrid from './OrbitalGrid';
 import CollisionBeam from './CollisionBeam';
 import SatelliteLabel from './SatelliteLabel';
@@ -134,7 +134,7 @@ export default function Scene({
   return (
     <Canvas
       camera={{ position: [0, 0.5, 3.2], fov: 45, near: 0.01, far: 100 }}
-      gl={{ antialias: true, alpha: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0 }}
+      gl={{ antialias: true, alpha: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: false }}
     >
       {/* Deep space background — matches UI bg */}
       <color attach="background" args={['#050a18']} />
@@ -158,7 +158,7 @@ export default function Scene({
         <pointLight position={[0, -4, 3]} intensity={0.25} color="#06b6d4" distance={10} />
 
         {/* Deep Field Stars */}
-        <Stars radius={60} depth={60} count={6000} factor={3} saturation={0.3} fade speed={0.15} />
+        <Stars radius={60} depth={60} count={3000} factor={3} saturation={0.3} fade speed={0.15} />
 
         {/* Ambient space particles */}
         <AmbientParticles />
@@ -168,7 +168,7 @@ export default function Scene({
         {/* Digital Twin: Orbital Grid */}
         <OrbitalGrid visible={showGrid} />
 
-        <DensityField positions={positions} />
+
 
         {positions?.map(sat => (
           <Satellite

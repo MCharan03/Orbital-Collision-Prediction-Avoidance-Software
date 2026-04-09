@@ -98,7 +98,7 @@ export default function Earth() {
     <group>
       {/* Earth surface layer (STATIONARY for ECEF alignment) */}
       <mesh ref={earthRef}>
-        <sphereGeometry args={[1, 128, 128]} />
+        <sphereGeometry args={[1, 64, 64]} />
         <meshStandardMaterial
           map={dayMap}
           emissiveMap={nightMap}
@@ -113,7 +113,7 @@ export default function Earth() {
 
       {/* Dynamic cloud layer (Drifting) */}
       <mesh ref={cloudRef}>
-        <sphereGeometry args={[1.015, 64, 64]} />
+        <sphereGeometry args={[1.015, 48, 48]} />
         <meshStandardMaterial
           map={cloudMap}
           transparent={true}
@@ -127,7 +127,7 @@ export default function Earth() {
 
       {/* Atmosphere glow — realistic Rayleigh scattering simulation edge */}
       <mesh ref={atmosphereRef} material={atmosphereMaterial}>
-        <sphereGeometry args={[1.035, 128, 128]} />
+        <sphereGeometry args={[1.035, 48, 48]} />
       </mesh>
     </group>
   );
