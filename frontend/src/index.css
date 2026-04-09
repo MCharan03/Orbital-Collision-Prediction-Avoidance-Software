@@ -195,7 +195,7 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 20px;
-  top: calc(var(--header-height) + 40px);
+  top: calc(var(--header-height) + 76px);
   bottom: 80px; /* leave room for time slider */
   transition: opacity 0.4s var(--ease-out-expo), filter 0.4s var(--ease-out-expo);
 }
@@ -2724,13 +2724,13 @@ body.full-view-active .dt-controls {
    ═══════════════════════════════════════════════════════════ */
 
 .dashboard-tabs {
+  position: absolute;
+  top: calc(var(--header-height) + 8px);
+  left: 20px;
   display: flex;
   gap: 4px;
-  padding: 0 20px;
-  margin-top: 4px;
-  margin-bottom: 8px;
-  z-index: 20;
-  position: relative;
+  z-index: 55;
+  pointer-events: auto;
 }
 
 .dashboard-tab {
