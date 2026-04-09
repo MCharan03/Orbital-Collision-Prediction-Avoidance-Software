@@ -76,13 +76,13 @@ def create_app():
 if __name__ == "__main__":
     app = create_app()
     print(f"""
-╔══════════════════════════════════════════════════════╗
-║           FORGE-X  Space Traffic Management          ║
-║        AI-Based Satellite Collision Prediction        ║
-╠══════════════════════════════════════════════════════╣
-║  Server:  http://{FLASK_HOST}:{FLASK_PORT}                       ║
-║  API:     http://localhost:{FLASK_PORT}/api                  ║
-║  Health:  http://localhost:{FLASK_PORT}/api/health            ║
-╚══════════════════════════════════════════════════════╝
++------------------------------------------------------+
+|           FORGE-X  Space Traffic Management          |
+|        AI-Based Satellite Collision Prediction        |
++------------------------------------------------------+
+|  Server:  http://{FLASK_HOST}:{FLASK_PORT}                       |
+|  API:     http://localhost:{FLASK_PORT}/api                  |
+|  Health:  http://localhost:{FLASK_PORT}/api/health            |
++------------------------------------------------------+
     """)
     app.run(host=FLASK_HOST, port=FLASK_PORT, debug=FLASK_DEBUG)
