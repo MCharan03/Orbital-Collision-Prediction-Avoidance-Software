@@ -2421,3 +2421,301 @@ body.full-view-active .dt-controls {
   font-weight: 600;
   color: #e2e8f0;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   ASWAN Panel — Space Weather Network
+   ═══════════════════════════════════════════════════════════ */
+
+.aswan-panel {
+  position: absolute;
+  bottom: 100px;
+  left: 16px;
+  width: 290px;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 20;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+}
+
+.aswan-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+.aswan-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.aswan-title {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: #06b6d4;
+  letter-spacing: 0.08em;
+}
+
+.aswan-subtitle {
+  font-size: 10px;
+  color: rgba(148, 163, 184, 0.7);
+  letter-spacing: 0.05em;
+}
+
+.aswan-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(148, 163, 184, 0.6);
+}
+
+.aswan-threat-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid;
+  letter-spacing: 0.1em;
+}
+
+.aswan-body {
+  padding: 8px 12px 12px;
+  overflow: hidden;
+}
+
+.aswan-section {
+  margin-bottom: 10px;
+}
+
+.aswan-section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(148, 163, 184, 0.6);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+/* Event Cards */
+.aswan-event-card {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 4px;
+}
+
+.aswan-event-card.solar {
+  border-left: 2px solid #ff2d55;
+}
+
+.aswan-event-card.meteor {
+  border-left: 2px solid #ff6b35;
+}
+
+.aswan-event-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.aswan-event-icon {
+  display: flex;
+  align-items: center;
+  color: #f59e0b;
+}
+
+.aswan-event-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #e2e8f0;
+  flex: 1;
+}
+
+.aswan-status-pill {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.aswan-status-pill.approaching {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.aswan-status-pill.incoming {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.aswan-status-pill.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.aswan-event-metrics {
+  display: flex;
+  gap: 12px;
+  padding-left: 20px;
+}
+
+.aswan-metric {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.aswan-metric-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(148, 163, 184, 0.5);
+  font-weight: 600;
+}
+
+.aswan-metric-value {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+/* Network Comparison */
+.aswan-network-comparison {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aswan-risk-gauge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aswan-gauge-label {
+  font-size: 10px;
+  color: rgba(148, 163, 184, 0.7);
+  width: 90px;
+  flex-shrink: 0;
+}
+
+.aswan-gauge-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.aswan-gauge-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.aswan-gauge-fill.danger {
+  background: linear-gradient(90deg, #ef4444, #ff6b6b);
+}
+
+.aswan-gauge-fill.safe {
+  background: linear-gradient(90deg, #22c55e, #4ade80);
+}
+
+.aswan-gauge-value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  width: 35px;
+  text-align: right;
+}
+
+.aswan-reduction-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: rgba(148, 163, 184, 0.6);
+  margin-top: 2px;
+}
+
+/* Recommendations */
+.aswan-recommendations {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 120px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.aswan-rec-card {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(99, 102, 241, 0.08);
+  border-radius: 5px;
+  padding: 6px 8px;
+}
+
+.aswan-rec-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.aswan-rec-sat {
+  font-size: 10px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.aswan-rec-priority {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid;
+  letter-spacing: 0.08em;
+}
+
+.aswan-rec-action {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  color: rgba(148, 163, 184, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.aswan-rec-detail {
+  font-size: 10px;
+  color: rgba(148, 163, 184, 0.5);
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+.aswan-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba(99, 102, 241, 0.1);
+  font-size: 10px;
+  color: rgba(148, 163, 184, 0.5);
+}
+
