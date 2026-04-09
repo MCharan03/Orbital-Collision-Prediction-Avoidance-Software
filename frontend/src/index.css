@@ -393,6 +393,14 @@ body.full-view-active .global-nav {
   background: rgba(255, 255, 255, 0.07);
 }
 
+.group-selector select option {
+  background: #0c1425;
+  color: #e2e8f0;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+}
+
 /* ══════════════════════════════════════════════════════════
    SIDEBAR — Full Glass Transparency
    ══════════════════════════════════════════════════════════ */
