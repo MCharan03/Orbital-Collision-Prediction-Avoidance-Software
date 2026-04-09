@@ -1,7 +1,7 @@
 import { Suspense, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
-import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
+// Post-processing removed — causes WebGL context loss on integrated GPUs
 import * as THREE from 'three';
 import { easing } from 'maath';
 
@@ -9,7 +9,7 @@ import Earth from './Earth';
 import Satellite from './Satellite';
 import CollisionZone from './CollisionZone';
 import OrbitTrail from './OrbitTrail';
-import DensityField from './DensityField';
+// DensityField removed — causes WebGL crashes on integrated GPUs
 import OrbitalGrid from './OrbitalGrid';
 import CollisionBeam from './CollisionBeam';
 import SatelliteLabel from './SatelliteLabel';
@@ -28,14 +28,13 @@ function CameraRig({ selectedSatId, positions, autoRotate }) {
   }, [selectedSatId, positions]);
 
   useFrame((state, delta) => {
-    if (focusTarget) {
-      easing.damp3(
-        state.camera.position,
-        [focusTarget.x * 2, focusTarget.y * 2 + 0.5, focusTarget.z * 2],
-        0.4,
-        delta
-      );
-      state.camera.lookAt(0, 0, 0);
+    if (focusTarget && controlsRef.current) {
+      // Instead of forcing camera position every frame, we softly pan the OrbitControls target to the satellite
+      // This allows the user to still zoom in/out while looking at the satellite!
+      easing.damp3(controlsRef.current.target, [focusTarget.x, focusTarget.y, focusTarget.z], 0.25, delta);
+    } else if (controlsRef.current) {
+      // Return to origin if nothing selected
+      easing.damp3(controlsRef.current.target, [0, 0, 0], 0.25, delta);
     }
   });
 
@@ -51,7 +50,6 @@ function CameraRig({ selectedSatId, positions, autoRotate }) {
       zoomSpeed={0.8}
       autoRotate={autoRotate && !focusTarget}
       autoRotateSpeed={0.3}
-      enabled={!focusTarget}
     />
   );
 }
@@ -134,7 +132,18 @@ export default function Scene({
   return (
     <Canvas
       camera={{ position: [0, 0.5, 3.2], fov: 45, near: 0.01, far: 100 }}
-      gl={{ antialias: true, alpha: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0 }}
+      gl={{ antialias: false, alpha: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0, powerPreference: 'high-performance' }}
+      dpr={[1, 1.5]}
+      onPointerMissed={() => onSelectSatellite && onSelectSatellite(null)}
+      onCreated={({ gl }) => {
+        gl.domElement.addEventListener('webglcontextlost', (e) => {
+          e.preventDefault();
+          console.warn('[ORBIX] WebGL context lost — will auto-restore');
+        });
+        gl.domElement.addEventListener('webglcontextrestored', () => {
+          console.log('[ORBIX] WebGL context restored');
+        });
+      }}
     >
       {/* Deep space background — matches UI bg */}
       <color attach="background" args={['#050a18']} />
@@ -158,17 +167,15 @@ export default function Scene({
         <pointLight position={[0, -4, 3]} intensity={0.25} color="#06b6d4" distance={10} />
 
         {/* Deep Field Stars */}
-        <Stars radius={60} depth={60} count={6000} factor={3} saturation={0.3} fade speed={0.15} />
+        <Stars radius={60} depth={60} count={3000} factor={3} saturation={0.3} fade speed={0.15} />
 
-        {/* Ambient space particles */}
-        <AmbientParticles />
 
         <Earth />
 
         {/* Digital Twin: Orbital Grid */}
         <OrbitalGrid visible={showGrid} />
 
-        <DensityField positions={positions} />
+
 
         {positions?.map(sat => (
           <Satellite
@@ -228,16 +235,7 @@ export default function Scene({
           />
         ))}
 
-        {/* Post Processing */}
-        <EffectComposer disableNormalPass multisampling={0}>
-          <Bloom 
-            luminanceThreshold={2.5} 
-            mipmapBlur 
-            intensity={0.3} 
-            radius={0.3}
-          />
-          <Vignette eskil={false} offset={0.1} darkness={0.5} />
-        </EffectComposer>
+
 
         <CameraRig
           selectedSatId={selectedSatId}

@@ -59,6 +59,9 @@ export default function Dashboard() {
   const [forecast, setForecast] = useState(null);
   const [forecastLoading, setForecastLoading] = useState(false);
 
+  // ── Active Tab ─────────────────────────────
+  const [activeTab, setActiveTab] = useState('overview');
+
   // ── Digital Twin Controls ─────────────────
   const [dtGrid, setDtGrid] = useState(true);
   const [dtBeams, setDtBeams] = useState(true);
@@ -89,7 +92,7 @@ export default function Dashboard() {
       setCollisionSummary(data.collision_summary || null);
       setLastUpdate(data.time);
     } catch (err) {
-      console.error('[Forge-X] Failed to load dashboard:', err);
+      console.error('[Orbix] Failed to load dashboard:', err);
       setError(err.message || 'Failed to connect to backend');
     } finally {
       setLoading(false);
@@ -124,7 +127,7 @@ export default function Dashboard() {
       const data = await fetchForecast(group, 120);
       setForecast(data);
     } catch (err) {
-      console.error('[Forge-X] Failed to load forecast:', err);
+      console.error('[Orbix] Failed to load forecast:', err);
       setForecast(null);
     } finally {
       setForecastLoading(false);
@@ -158,7 +161,7 @@ export default function Dashboard() {
       const data = await fetchTrail(sat.norad_id, group, 90);
       setTrail(data.trail || []);
     } catch (err) {
-      console.error('[Forge-X] Failed to fetch trail:', err);
+      console.error('[Orbix] Failed to fetch trail:', err);
       setTrail(null);
     }
   }, [group]);
@@ -184,16 +187,24 @@ export default function Dashboard() {
 
   const handleAutoResolve = async () => {
     setResolvingLoading(true);
-    setResolutions(null); // Clear previous feed
+    setResolutions(null);
     try {
       const data = await fetchAutoResolutions(group);
       setResolutions(data.resolutions || []);
     } catch (err) {
-      console.error("[Forge-X] Failed to auto resolve", err);
+      console.error("[Orbix] Failed to auto resolve", err);
     } finally {
       setResolvingLoading(false);
     }
   };
+
+  // ── Tab Definitions ────────────────────────
+  const tabs = [
+    { id: 'overview', label: 'Dashboard', icon: '🌐' },
+    { id: 'forecast', label: 'Forecast', icon: '📊' },
+    { id: 'aswan', label: 'ASWAN', icon: '⚡' },
+    { id: 'ai', label: 'AI Traffic', icon: '🤖' },
+  ];
 
   // ── Loading Screen ─────────────────────────
   if (loading) {
@@ -224,6 +235,61 @@ export default function Dashboard() {
     );
   }
 
+  // ── Render Left Panel Content Based on Active Tab ──
+  const renderLeftPanel = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <>
+            <StatsPanel
+              satelliteCount={positions.length}
+              collisionSummary={collisionSummary}
+              weatherData={weatherData}
+              networkData={networkData}
+            />
+            <ForecastPanel
+              forecast={forecast}
+              loading={forecastLoading}
+            />
+          </>
+        );
+      case 'forecast':
+        return (
+          <div className="tab-full-panel">
+            <ForecastPanel
+              forecast={forecast}
+              loading={forecastLoading}
+              expanded={true}
+            />
+          </div>
+        );
+      case 'aswan':
+        return (
+          <div className="tab-full-panel">
+            <ASWANPanel
+              weatherData={weatherData}
+              networkData={networkData}
+            />
+          </div>
+        );
+      case 'ai':
+        return (
+          <div className="tab-full-panel ai-tab-panel">
+            <TrafficManagerAI
+              satelliteContext={positions}
+              onHighlightSatellites={(ids) => {
+                setAiHighlightedIds(ids);
+                setTimeout(() => setAiHighlightedIds([]), 12000);
+              }}
+              embedded={true}
+            />
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   // ── Main Layout ────────────────────────────
   return (
     <div className="app-layout">
@@ -247,120 +313,38 @@ export default function Dashboard() {
           />
         </ErrorBoundary>
 
-        {/* Globe overlay badges */}
-        <div className="globe-overlay" style={{ opacity: isFullView ? 0 : 1, transition: 'opacity 0.4s', pointerEvents: isFullView ? 'none' : 'auto' }}>
-          <div className="overlay-badge dt-badge">
-            <span className="dt-pulse"></span>
-            DIGITAL TWIN
+        {/* Unified Bottom Dock */}
+        <div className="unified-bottom-dock" style={{ opacity: isFullView ? 0 : 1 }}>
+          <div className="dt-controls-compact">
+            <button className={`dt-btn-mini ${dtGrid ? 'active' : ''}`} onClick={() => setDtGrid(!dtGrid)} title="Grid">
+              🌐
+            </button>
+            <button className={`dt-btn-mini ${dtBeams ? 'active' : ''}`} onClick={() => setDtBeams(!dtBeams)} title="Beams">
+              ⚡
+            </button>
+            <button className={`dt-btn-mini ${dtLabels ? 'active' : ''}`} onClick={() => setDtLabels(!dtLabels)} title="Labels">
+              🏷️
+            </button>
+            <button className={`dt-btn-mini ${dtRotate ? 'active' : ''}`} onClick={() => setDtRotate(!dtRotate)} title="Rotate">
+              🔄
+            </button>
           </div>
-          <div className="overlay-badge">
-            🛰 <span className="count">{positions.length}</span> satellites
+          
+          <div className="bottom-divider" />
+
+          <div className="time-slider-dock-wrap">
+            <TimeSlider onTimeChange={handleTimeChange} isLoading={timeLoading} compact={true} />
           </div>
-          {collisionSummary && collisionSummary.total_events > 0 && (
-            <div className="overlay-badge" style={{
-              borderColor: collisionSummary.high_risk > 0
-                ? 'rgba(239, 68, 68, 0.3)'
-                : 'rgba(245, 158, 11, 0.3)'
-            }}>
-              ⚠ <span className="count" style={{
-                color: collisionSummary.high_risk > 0 ? '#ef4444' : '#f59e0b'
-              }}>
-                {collisionSummary.total_events}
-              </span> conjunction events
-            </div>
-          )}
-          {weatherData && weatherData.active_event_count > 0 && (
-            <div className="overlay-badge" style={{
-              borderColor: 'rgba(255, 107, 53, 0.3)'
-            }}>
-              ⚡ <span className="count" style={{ color: '#ff6b35' }}>
-                {weatherData.active_event_count}
-              </span> weather events
-            </div>
-          )}
-          {selectedSat && (
-            <div className="overlay-badge" style={{ borderColor: 'rgba(34, 211, 238, 0.3)' }}>
-              📡 <span className="count">{selectedSat.name}</span>
-              <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.6 }}>
-                Alt: {selectedSat.alt?.toFixed(0)} km
-              </span>
-            </div>
-          )}
         </div>
 
-        {/* Digital Twin Controls */}
-        <div className="dt-controls" style={{ opacity: isFullView ? 0 : 1, pointerEvents: isFullView ? 'none' : 'auto' }}>
-          <div className="dt-controls-label">DIGITAL TWIN</div>
-          <button
-            className={`dt-btn ${dtGrid ? 'active' : ''}`}
-            onClick={() => setDtGrid(!dtGrid)}
-            title="Toggle Orbital Grid"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            </svg>
-            Grid
-          </button>
-          <button
-            className={`dt-btn ${dtBeams ? 'active' : ''}`}
-            onClick={() => setDtBeams(!dtBeams)}
-            title="Toggle Collision Beams"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 4l16 16"/><circle cx="4" cy="4" r="2"/><circle cx="20" cy="20" r="2"/>
-            </svg>
-            Beams
-          </button>
-          <button
-            className={`dt-btn ${dtLabels ? 'active' : ''}`}
-            onClick={() => setDtLabels(!dtLabels)}
-            title="Toggle Satellite Labels"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
-            </svg>
-            Labels
-          </button>
-          <button
-            className={`dt-btn ${dtRotate ? 'active' : ''}`}
-            onClick={() => setDtRotate(!dtRotate)}
-            title="Toggle Auto-Rotate"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
-            </svg>
-            Rotate
-          </button>
-        </div>
-
-        {/* Floating Full View Toggle Button */}
+        {/* Full View Toggle */}
         <button 
-          className="time-btn" 
+          className={`full-view-toggle ${isFullView ? 'active' : ''}`}
           onClick={() => setIsFullView(!isFullView)}
           title={isFullView ? "Exit Full View" : "Enter Full View"}
-          style={{ 
-            position: 'absolute', 
-            bottom: 35, 
-            left: '50%', 
-            transform: 'translateX(320px)',
-            zIndex: 60, 
-            fontFamily: 'var(--font-mono)', 
-            padding: '12px 24px', 
-            borderRadius: '24px', 
-            fontSize: '11px', 
-            fontWeight: 'bold',
-            backdropFilter: 'blur(10px)',
-            background: isFullView ? 'rgba(239, 68, 68, 0.2)' : 'rgba(168, 85, 247, 0.2)',
-            border: isFullView ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(168, 85, 247, 0.4)',
-            color: '#fff',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
-          }}
         >
-          {isFullView ? "✕ Exit Full View" : "⛶ Full View"}
+          {isFullView ? "✕ Exit" : "⛶ Full View"}
         </button>
-
-        {/* Time simulation slider */}
-        <TimeSlider onTimeChange={handleTimeChange} isLoading={timeLoading} />
       </div>
 
       {/* Floating UI Overlays */}
@@ -372,31 +356,30 @@ export default function Dashboard() {
           lastUpdate={lastUpdate}
         />
 
-        <div className="floating-ui-layer">
-          {/* Left Column Widgets */}
+        {/* Centered Tab Navigation */}
+        <div className="dashboard-tabs-centered" style={{ opacity: isFullView ? 0 : 1 }}>
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              className={`dashboard-tab-pill ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              <span className="tab-icon">{tab.icon}</span>
+              <span className="tab-label">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="floating-ui-layer" style={{ opacity: isFullView ? 0 : 1, pointerEvents: isFullView ? 'none' : 'auto' }}>
+          {/* Left Column — Content changes based on active tab */}
           <div className="floating-left-widgets">
-            <StatsPanel
-              satelliteCount={positions.length}
-              collisionSummary={collisionSummary}
-              weatherData={weatherData}
-              networkData={networkData}
-            />
-            {/* ASWAN Panel below stats */}
-            <ASWANPanel
-              weatherData={weatherData}
-              networkData={networkData}
-            />
-            <ForecastPanel
-              forecast={forecast}
-              loading={forecastLoading}
-            />
+            {renderLeftPanel()}
           </div>
 
-          {/* Right Column Widgets */}
+          {/* Right Column — Always visible */}
           <div className="floating-right-widgets">
             <button 
-              className="time-btn" 
-              style={{ width: '100%', marginBottom: '16px', background: 'rgba(168, 85, 247, 0.1)', borderColor: '#a855f7', color: '#a855f7', display: 'flex', justifyContent: 'center', gap: '8px', alignItems: 'center' }}
+              className="time-btn resolve-btn" 
               onClick={handleAutoResolve}
               disabled={resolvingLoading}
             >
@@ -435,14 +418,16 @@ export default function Dashboard() {
         />
       )}
 
-      {/* Anti-Gravity Traffic Manager AI */}
-      <TrafficManagerAI
-        satelliteContext={positions}
-        onHighlightSatellites={(ids) => {
-          setAiHighlightedIds(ids);
-          setTimeout(() => setAiHighlightedIds([]), 12000);
-        }}
-      />
+      {/* Traffic Manager AI — only shown as floating when NOT on AI tab */}
+      {activeTab !== 'ai' && !isFullView && (
+        <TrafficManagerAI
+          satelliteContext={positions}
+          onHighlightSatellites={(ids) => {
+            setAiHighlightedIds(ids);
+            setTimeout(() => setAiHighlightedIds([]), 12000);
+          }}
+        />
+      )}
 
       {resolutions && (
         <NegotiationFeed resolutions={resolutions} onClose={() => setResolutions(null)} />

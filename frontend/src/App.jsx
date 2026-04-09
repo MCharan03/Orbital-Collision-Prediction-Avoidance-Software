@@ -1,29 +1,39 @@
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import LandingPage from './components/Landing/LandingPage';
 import Dashboard from './components/Dashboard/Dashboard';
-import SpaceFeed from './components/Feed/SpaceFeed';
 
-export default function App() {
+const pageVariants = {
+  initial: { opacity: 0, y: 20 },
+  in: { opacity: 1, y: 0 },
+  out: { opacity: 0, y: -20 }
+};
+
+const pageTransition = {
+  type: "tween",
+  ease: "anticipate",
+  duration: 0.5
+};
+
+function App() {
   const location = useLocation();
 
   return (
-    <>
-      {/* Global Navigation Overlay */}
-      <div className="global-nav glass-panel">
-        <Link to="/" className={`nav-item ${location.pathname === '/' ? 'active' : ''}`}>
-          <span className="icon">🌐</span> <span className="label">Dashboard</span>
-        </Link>
-        <div className="nav-divider"></div>
-        <Link to="/space-feed" className={`nav-item ${location.pathname === '/space-feed' ? 'active' : ''}`}>
-          <span className="icon">📡</span> <span className="label">Intelligence Feed</span>
-        </Link>
-      </div>
-
-      <div className="app-content-wrapper">
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/space-feed" element={<SpaceFeed />} />
-        </Routes>
-      </div>
-    </>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={
+          <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition} className="min-h-screen">
+            <LandingPage />
+          </motion.div>
+        } />
+        <Route path="/dashboard" element={
+          <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition} className="min-h-screen">
+            <Dashboard />
+          </motion.div>
+        } />
+      </Routes>
+    </AnimatePresence>
   );
 }
+
+export default App;
